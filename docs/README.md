@@ -1,5 +1,7 @@
 # 漫剧助手X-2 用户版
 
+> **注**: 本 README 里的 `<your-org>` 是发版占位符,user 发版前需替换成实际 GitHub org/user 名(详见 `GITHUB_RELEASE.md`)。
+
 ## 快速上手
 
 1. **下载安装包**: 从 [Releases](https://github.com/&lt;your-org&gt;/manju-x2/releases) 下载最新 `漫剧助手X-2_vX.Y.Z_Setup.exe`
@@ -8,6 +10,14 @@
    - DeepSeek API key (https://platform.deepseek.com)
    - 或 Agnes AI / 创维中转 等
 4. **开始用**: 选 API → 创建项目 → 生成剧本/分镜/视频提示词
+
+## 文档
+
+- [INSTALL.md](INSTALL.md) - 详细安装 / 升级 / 卸载指南
+- [FAQ.md](FAQ.md) - 常见问题(40+ 条)
+- [更新日志.md](更新日志.md) - 版本变更记录
+- [API配置说明.md](API配置说明.md) - 各 API 配置详解
+- [GITHUB_RELEASE.md](../GITHUB_RELEASE.md) - 发版操作步骤(发版人看)
 
 ## 目录结构
 
