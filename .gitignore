@@ -1,0 +1,83 @@
+# 漫剧助手X-2 git 忽略规则
+# v1.0.0 用户版 - 避免把 dev 产物 / 临时文件 / 用户数据提交到 public repo
+
+# ===== PyInstaller 中间产物 (重新打包会重建) =====
+build/
+dist/
+*.spec.bak
+# 保留 *.spec 文件本身(给 build_x2.py 用)
+
+# ===== Python 缓存 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ===== 虚拟环境 =====
+venv/
+env/
+.venv/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== 用户数据 (绝不入 public repo) =====
+outputs/
+data/*.db
+data/*.db-*
+config/secrets.bin
+config/.update_check_cache.json
+config/.update_check_cache.json.tmp
+logs/
+*.log
+*.log.*
+
+# ===== hermes 资源 (会被独立 git 仓库管) =====
+# Phase 2 的 hermes_dist/ 是 PyInstaller 产物,不入 repo
+source/hermes_dist/
+# hermes skills/profiles 由 build_x2.py 拷贝,不入 repo
+source/resources/hermes/profiles/*/sessions/
+source/resources/hermes/profiles/*/memories/
+source/resources/hermes/profiles/*/bin/
+source/resources/hermes/profiles/*/cache/
+source/resources/hermes/profiles/*/state.db*
+source/resources/hermes/profiles/*/auth.lock
+source/resources/hermes/profiles/*/config.yaml.dev.bak
+source/resources/hermes/profiles/*/models_dev_cache.json
+source/resources/hermes/profiles/*/processes.json
+source/resources/hermes/profiles/*/.skills_prompt_snapshot.json
+source/resources/hermes/profiles/*/.update_check
+source/resources/hermes/profiles/*/*.bak*
+# hermes 顶层运行时残留(用户数据,绝不入 public repo)
+source/resources/hermes/sessions/
+source/resources/hermes/memories/
+source/resources/hermes/audio_cache/
+source/resources/hermes/image_cache/
+source/resources/hermes/logs/
+source/resources/hermes/pairing/
+source/resources/hermes/cron/
+
+# ===== 临时调试文件 (Phase 1 历史) =====
+# 跟 v0.6.x UI 调试相关的 click_*.py / tmp_*.py / debug_*.py 都不入
+click_*.py
+test_*.py
+check_*.py
+debug_*.py
+tmp_*.py
+test_apihub_urls.py
+tests/
+click_v6*/
+
+# ===== OS 临时文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 用户 API key 痕迹(防御性,即使没填也忽略) =====
+.env
+.env.local
+*.key
+*.secret

@@ -1,0 +1,77 @@
+{
+  "_comment": "漫剧助手X-2 用户版 hermes_api.json 模板。base_url / model 模板保留(用户已确认 API 网站可以保留),所有 api_key 全空(用户首次启动 wizard 填)。首次启动 EXE 会检测到 secrets.bin 不存在,引导用户填 key,加密存到 config/secrets.bin(Windows DPAPI)。",
+  "hermes_exe": "hermes/hermes.exe",
+  "outputs_dir": "outputs",
+  "dreamina_exe": "",
+  "dreamina_image_args": [],
+  "dreamina_image_poll_seconds": 2,
+  "dreamina_image_max_wait": 600,
+  "dreamina_default_negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, username, blurry",
+  "dreamina_video_args": [],
+  "dreamina_video_poll_seconds": 2,
+  "dreamina_video_max_wait": 1800,
+  "dreamina_default_video_negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, username, blurry, flicker, jitter",
+  "video_output_extension": ".mp4",
+  "configs": [
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key": ""
+    },
+    {
+      "id": "agnes",
+      "name": "Agnes AI",
+      "provider": "custom",
+      "model": "agnes-2.0-flash",
+      "base_url": "https://apihub.agnes-ai.com/v1",
+      "api_key": ""
+    },
+    {
+      "id": "chuangwei",
+      "name": "创维中转",
+      "provider": "custom",
+      "model": "gemini-3.1-pro-preview",
+      "base_url": "https://chuangwei.cyou/v1",
+      "api_key": ""
+    }
+  ],
+  "active": "deepseek",
+  "profiles": {
+    "storyboard": "storyboard",
+    "video_prompt": "seedance-prompt",
+    "asset": "asset-designer"
+  },
+  "timeout_seconds": 7200,
+  "hermes_home": "",
+  "image_configs": [
+    {
+      "id": "default",
+      "name": "agnes-生图",
+      "base_url": "https://apihub.agnes-ai.com/v1",
+      "api_key": "",
+      "model": "agnes-image-2.1-flash",
+      "resolution": "2K",
+      "ratio": "1:1",
+      "timeout": 600,
+      "saved_models": []
+    }
+  ],
+  "active_image_config": "default",
+  "dreamina_models": [],
+  "video_api_configs": [
+    {
+      "id": "default",
+      "name": "agnes-生视频",
+      "base_url": "https://apihub.agnes-ai.com/v1",
+      "api_key": "",
+      "model": "agnes-video-v2.0",
+      "timeout": 1800
+    }
+  ],
+  "active_video_api_config": "default",
+  "image_host_api_key": "",
+  "_user_keys_required": true
+}
