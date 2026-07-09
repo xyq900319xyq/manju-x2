@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -52,6 +52,12 @@ VersionInfoDescription={#MyAppName} 安装包
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 MinVersion=10.0
+; v1.1.0 一键更新:让 Inno Setup 自动识别并关闭运行中的漫剧助手X-2.exe
+; 然后装完后自动重启新版本(配合 main_window._launch_setup_silent 的 /CLOSEAPPLICATIONS)
+CloseApplicationsFilter=漫剧助手X-2.exe;manju-x2.exe
+CloseApplications=yes
+RestartApplications=yes
+SetupMutex=漫剧助手X-2_InstanceMutex
 
 [Languages]
 Name: "chinesesimp"; MessagesFile: "compiler:Default.isl"

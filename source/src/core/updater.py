@@ -1,4 +1,4 @@
-﻿"""v1.0.0 用户版：启动后台检查 GitHub releases 有无新版。
+"""v1.0.0 用户版：启动后台检查 GitHub releases 有无新版。
 
 设计要点（v1.0.0 用户版）：
 - 后台 QThread 拉 GitHub `releases/latest` API（超时 10 秒）
@@ -47,7 +47,7 @@ class UpdateInfo:
     """更新检查结果。
 
     has_update / error_msg 互斥：
-    - 拉取成功:has_update=True/False, latest_version/html_url/release_notes 有意义
+    - 拉取成功:has_update=True/False, latest_version/html_url/release_notes/asset_url 有意义
     - 拉取失败:error_msg 有值, has_update=False
     """
     has_update: bool = False
@@ -55,6 +55,8 @@ class UpdateInfo:
     latest_version: str = ""
     html_url: str = ""
     release_notes: str = ""
+    asset_url: str = ""  # v1.1.0: Setup.exe 的 browser_download_url
+    asset_size: int = 0  # v1.1.0: 字节数,UI 进度条用
     error_msg: str = ""
     checked_at: float = 0.0  # time.time() 时间戳
 
@@ -69,6 +71,8 @@ class UpdateInfo:
             latest_version=str(d.get("latest_version", "") or ""),
             html_url=str(d.get("html_url", "") or ""),
             release_notes=str(d.get("release_notes", "") or ""),
+            asset_url=str(d.get("asset_url", "") or ""),
+            asset_size=int(d.get("asset_size", 0) or 0),
             error_msg=str(d.get("error_msg", "") or ""),
             checked_at=float(d.get("checked_at", 0) or 0),
         )
@@ -299,6 +303,141 @@ class UpdateChecker(QObject):
             log.info("updater: 已是最新版 %s", info.latest_version or self._current)
             self.no_update.emit(info)
         self.checked.emit(info)
+
+    def _reset_thread_refs(self) -> None:
+        self._thread = None
+        self._worker = None
+
+
+# ---------- v1.1.0 一键更新：后台下载 Setup.exe ----------
+
+class _DownloadWorker(QObject):
+    """跑在 QThread 上,流式下载 Setup.exe 到磁盘,emit progress / finished / error。
+
+    取消: 设 self._cancel = True(由 UpdateDownloader.cancel() 调)。
+    流式 read(64KB),每 ~1% 触发一次 progress,避免频繁 signal 阻塞主线程。
+    """
+    progress = Signal(int, int, int)  # percent (0-100), received, total
+    finished = Signal(str)            # dest_path
+    error = Signal(str)               # error msg
+
+    CHUNK = 64 * 1024  # 64KB
+
+    def __init__(self, url: str, dest_path: str) -> None:
+        super().__init__()
+        self._url = url
+        self._dest = dest_path
+        self._cancel = False
+
+    def run(self) -> None:
+        try:
+            req = urllib.request.Request(
+                self._url,
+                headers={"User-Agent": "manju-x2-updater/1.1"},
+            )
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                total = int(resp.headers.get("Content-Length", 0) or 0)
+                received = 0
+                last_pct = -1
+                os.makedirs(os.path.dirname(self._dest), exist_ok=True)
+                with open(self._dest, "wb") as f:
+                    while True:
+                        if self._cancel:
+                            f.close()
+                            try:
+                                os.remove(self._dest)
+                            except OSError:
+                                pass
+                            self.error.emit("用户取消")
+                            return
+                        chunk = resp.read(self.CHUNK)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        received += len(chunk)
+                        if total > 0:
+                            pct = int(received * 100 / total)
+                            if pct != last_pct:
+                                last_pct = pct
+                                self.progress.emit(pct, received, total)
+                        else:
+                            # 不知道总大小时,按 1MB 一次发
+                            if received % (1024 * 1024) < self.CHUNK:
+                                self.progress.emit(-1, received, 0)
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as e:
+            self.error.emit(f"{type(e).__name__}: {e}")
+        except Exception as e:  # noqa: BLE001
+            self.error.emit(f"{type(e).__name__}: {e}")
+        else:
+            self.progress.emit(100, received, total or received)
+            self.finished.emit(self._dest)
+
+
+class UpdateDownloader(QObject):
+    """v1.1.0 一键更新：后台下载 Setup.exe。
+
+    用法:
+        dl = UpdateDownloader(parent=window)
+        dl.start(asset_url, dest_path)
+        # 监听 dl.progress / dl.finished / dl.error
+    """
+    progress = Signal(int, int, int)
+    finished = Signal(str)
+    error = Signal(str)
+
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+        self._thread: Optional[QThread] = None
+        self._worker: Optional[_DownloadWorker] = None
+        self._dest: str = ""
+
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.isRunning()
+
+    def start(self, url: str, dest_path: str) -> bool:
+        """启动后台下载。Returns: True 已启动, False 已在跑。"""
+        if self.is_running():
+            log.warning("updater.download: 已有下载任务在跑,忽略新启动")
+            return False
+        if not url or not dest_path:
+            self.error.emit("url 或 dest_path 为空")
+            return False
+        self._dest = dest_path
+        self._thread = QThread(self)
+        self._worker = _DownloadWorker(url, dest_path)
+        self._worker.moveToThread(self._thread)
+        self._thread.started.connect(self._worker.run)
+        self._worker.progress.connect(self.progress.emit)
+        self._worker.finished.connect(self._on_finished)
+        self._worker.error.connect(self._on_error)
+        self._worker.finished.connect(self._thread.quit)
+        self._worker.error.connect(self._thread.quit)
+        self._thread.finished.connect(self._worker.deleteLater)
+        self._thread.finished.connect(self._thread.deleteLater)
+        self._thread.finished.connect(self._reset_thread_refs)
+        self._thread.start()
+        log.info("updater.download: 启动下载 %s → %s", url, dest_path)
+        return True
+
+    def cancel(self) -> None:
+        """用户取消:设 worker._cancel,worker 下次循环检查会退出 + 删文件。"""
+        if self._worker is not None:
+            self._worker._cancel = True
+            log.info("updater.download: 用户取消")
+
+    def _on_finished(self, dest: str) -> None:
+        log.info("updater.download: 下载完成 %s", dest)
+        self.finished.emit(dest)
+
+    def _on_error(self, msg: str) -> None:
+        log.info("updater.download: 下载失败 %s", msg)
+        self.error.emit(msg)
+        # 清理半成品
+        if self._dest and os.path.exists(self._dest):
+            try:
+                os.remove(self._dest)
+            except OSError:
+                pass
 
     def _reset_thread_refs(self) -> None:
         self._thread = None

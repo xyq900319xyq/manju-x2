@@ -1,0 +1,23 @@
+v1.1.0 — 一键自动更新
+
+## 新增
+- 菜单「帮助」新增红点 + 「检查更新」走一键更新流程
+  - 弹"立即更新?"对话框(显示当前/最新版本 + 安装包大小)
+  - 后台流式下载 Setup.exe(带进度条 + 取消)
+  - 下载完自动启动安装器静默装
+  - 装完自动重启新版本
+- core/updater.py 新增 UpdateDownloader + _DownloadWorker(QThread + urllib 流式)
+- UpdateInfo 加 asset_url / asset_size 字段
+
+## 改动
+- ui/main_window.py 加 _on_badge_clicked / _show_update_dialog / _launch_setup_silent
+- _on_check_update_manual 检测到新版直接进一键更新流程
+- installer/漫剧助手X-2.iss 加 CloseApplicationsFilter / CloseApplications / RestartApplications / SetupMutex
+- 版本号 1.0.3 → 1.1.0 (main.py 2 处 + .iss 1 处)
+- docs/更新日志.md + RELEASE_NOTES_v1.1.0.md
+
+## 技术
+- Setup.exe 存 %TEMP%(避免被反病毒扫描)
+- Inno Setup 静默装参数:/VERYSILENT /SUPPRESSMSGBOXES /SP- /CLOSEAPPLICATIONS /NORESTART
+- QApplication.quit() 释放 QSharedMemory mutex → SetupMutex 通过 → 装器继续
+- RestartApplications=yes 装完自动拉起新版本

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit, QGroupBox, QPushButton, QScrollArea,
     QFrame, QCheckBox, QFileDialog, QSizePolicy, QDialog,
     QLineEdit, QComboBox, QRadioButton, QButtonGroup,
+    QProgressDialog, QApplication,
 )
 from PySide6.QtCore import Qt, Slot, QTimer, QThread, Signal
 from PySide6.QtGui import QAction
@@ -42,6 +43,9 @@ from ui.log_dialog import LogBuffer, LogDialog
 from ui.project_tree import ProjectTree
 from ui.settings_dialog import SettingsDialog
 from ui.task_status import TaskStatusWidget
+
+# v1.1.0 一键更新
+from core.updater import UpdateDownloader
 
 APP_TITLE = "漫剧助手X-2"
 # ROOT 由 main.py 显式传入（支持 EXE 和源码两种模式）
@@ -356,10 +360,11 @@ class MainWindow(QMainWindow):
         self._act_check_update.setToolTip("点击立即检查 GitHub releases 上的最新版")
         self._act_check_update.triggered.connect(self._on_check_update_manual)
         m_help.addAction(self._act_check_update)
-        # 红点 badge（显示在菜单项前面）
+        # 红点 badge（v1.1.0 一键更新：点击直接弹"立即更新?"对话框）
         self._update_badge = QAction("🔴", self)
-        self._update_badge.setToolTip("有可用的新版本！点击「检查更新」查看详情")
+        self._update_badge.setToolTip("有可用的新版本！点击「立即更新」")
         self._update_badge.setVisible(False)
+        self._update_badge.triggered.connect(self._on_badge_clicked)
         m_help.addAction(self._update_badge)
         act_about = QAction("关于(&A)", self)
         act_about.triggered.connect(self._on_about)
@@ -396,29 +401,134 @@ class MainWindow(QMainWindow):
         # 注：有新版时 _on_update_available 会覆盖 status_msg，
         # 无新版时不强改状态栏文字（避免盖住用户当前上下文）
 
-    def _on_check_update_manual(self) -> None:
-        """用户主动点「检查更新」→ 强制拉取（跳过缓存）+ 弹结果对话框。"""
-        from core.updater import UpdateChecker, fetch_latest_release, has_newer_version
-        log.info("用户主动检查更新")
-        # 如果有 updater 实例且线程空闲，用它强制拉
+    @Slot()
+    def _on_badge_clicked(self) -> None:
+        """v1.1.0 一键更新：用户点红点 → 弹"立即更新?"对话框。"""
+        info = None
         if hasattr(self, "_updater") and self._updater is not None:
-            ok = self._updater.start_async(force=True)
-            if not ok:
-                self.status_msg.setText("检查更新：上一次拉取还在进行中…")
+            info = self._updater.latest_info
+        if info is None or not info.has_update:
+            QMessageBox.information(self, "提示", "暂无可用更新信息，请先点「检查更新」。")
             return
-        # 没 updater 实例（旧代码路径）→ 同步拉 + 弹对话框
+        self._show_update_dialog(info)
+
+    def _show_update_dialog(self, info) -> None:
+        """v1.1.0 一键更新：弹"立即更新?" → 启动后台下载 + 进度条。"""
+        if not info.asset_url:
+            QMessageBox.information(
+                self, "提示",
+                f"新版本 v{info.latest_version} 暂未提供 EXE 安装包，\n"
+                f"请前往 GitHub release 页面下载：\n{info.html_url}",
+            )
+            return
+        size_mb = (info.asset_size or 0) / (1024 * 1024)
+        size_text = f"{size_mb:.1f} MB" if size_mb > 0 else "未知大小"
+        ret = QMessageBox.question(
+            self, "发现新版本",
+            f"当前版本: v{info.current_version}\n"
+            f"最新版本: v{info.latest_version}\n"
+            f"安装包大小: {size_text}\n\n"
+            "是否立即下载并自动安装？\n"
+            "（下载完成后软件将自动关闭并启动安装程序）",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if ret != QMessageBox.Yes:
+            return
+        # 选个临时目录（v1.1.0【硬约束】:不用 EXE 同目录,避免被反病毒扫描）
+        try:
+            temp_dir = os.environ.get("TEMP") or os.environ.get("TMP") or str(Path.home())
+        except Exception:
+            temp_dir = str(Path.home())
+        dest = os.path.join(temp_dir, f"manju-x2-v{info.latest_version}-Setup.exe")
+        # 起下载器
+        self._downloader = UpdateDownloader(self)
+        dlg = QProgressDialog(
+            f"正在下载 v{info.latest_version} 安装包…", "取消", 0, 100, self,
+        )
+        dlg.setWindowTitle("一键更新")
+        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setMinimumDuration(0)
+        dlg.setValue(0)
+
+        def _on_progress(pct: int, received: int, total: int) -> None:
+            if pct < 0:
+                # 未知总大小时,显示已下载
+                dlg.setLabelText(f"已下载 {received / (1024 * 1024):.1f} MB…")
+            else:
+                dlg.setValue(pct)
+
+        def _on_finished(path: str) -> None:
+            dlg.close()
+            self.status_msg.setText(f"✅ v{info.latest_version} 下载完成,准备安装…")
+            log.info("下载完成 %s,准备启动静默安装", path)
+            self._launch_setup_silent(path, info.latest_version)
+
+        def _on_error(msg: str) -> None:
+            dlg.close()
+            log.warning("下载失败: %s", msg)
+            QMessageBox.critical(
+                self, "下载失败",
+                f"下载安装包失败：\n{msg}\n\n可前往 {info.html_url} 手动下载。",
+            )
+
+        self._downloader.progress.connect(_on_progress)
+        self._downloader.finished.connect(_on_finished)
+        self._downloader.error.connect(_on_error)
+        dlg.canceled.connect(self._downloader.cancel)
+        ok = self._downloader.start(info.asset_url, dest)
+        if not ok:
+            QMessageBox.warning(self, "提示", "已有下载任务在跑,请稍候。")
+            return
+        dlg.exec()
+
+    def _launch_setup_silent(self, setup_path: str, new_version: str) -> None:
+        """v1.1.0 一键更新:启动 Setup.exe 静默装,然后关主窗口让位给安装器。"""
+        if not os.path.exists(setup_path):
+            QMessageBox.critical(self, "安装失败", f"找不到安装包:\n{setup_path}")
+            return
+        ret = QMessageBox.question(
+            self, "开始安装",
+            f"v{new_version} 安装包已就绪,点击「是」立即安装。\n"
+            "安装过程中软件将自动关闭,新版本会自动启动。",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if ret != QMessageBox.Yes:
+            return
+        try:
+            # Inno Setup 6.x 静默装参数: /VERYSILENT /SUPPRESSMSGBOXES /SP- /NORESTART
+            # /CLOSEAPPLICATIONS 让安装器自动关掉 manju-x2.exe
+            subprocess.Popen(
+                [setup_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-",
+                 "/CLOSEAPPLICATIONS", "/NORESTART"],
+                close_fds=True,
+            )
+            log.info("已启动 Setup.exe 静默装: %s", setup_path)
+        except OSError as e:
+            QMessageBox.critical(self, "启动安装器失败", str(e))
+            return
+        # 给安装器一点时间启动再关自己(避免安装器还没起就被关)
+        QTimer.singleShot(500, QApplication.quit)
+
+    def _on_check_update_manual(self) -> None:
+        """用户主动点「检查更新」→ 强制拉取（跳过缓存）+ 有新版直接进一键更新流程。"""
+        from core.updater import fetch_latest_release, has_newer_version
+        log.info("用户主动检查更新")
+        # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.0.0"
+        info.current_version = "1.1.0"
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
+        # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)
+        if hasattr(self, "_updater") and self._updater is not None:
+            self._updater._latest_info = info
         if info.error_msg:
             QMessageBox.warning(self, "检查更新失败",
                                 f"无法连接到 GitHub：\n\n{info.error_msg}\n\n请稍后重试。")
         elif info.has_update:
-            QMessageBox.information(self, "有新版本",
-                                    f"当前版本: v{info.current_version}\n"
-                                    f"最新版本: {info.latest_version}\n\n"
-                                    f"访问 {info.html_url} 下载最新版。")
+            # v1.1.0:有新版 → 直接进一键更新流程,不弹只读对话框
+            self._show_update_dialog(info)
         else:
             QMessageBox.information(self, "已是最新版",
                                     f"当前版本: v{info.current_version}\n"
