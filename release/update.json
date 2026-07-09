@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
-  "url": "https://github.com/xyq900319xyq/manju-x2/releases/download/1.0.1/漫剧助手X-2_v1.0.1_Setup.exe",
-  "md5": "ffac59b7b64fc0c19d81c8dacd1bee78",
-  "sha256": "6751461c8149521b6d05bd163305422e8a2dbbd7e3596b43d85389a0b26526ec",
-  "size": 91177116,
+  "version": "1.0.2",
+  "url": "https://github.com/xyq900319xyq/manju-x2/releases/download/1.0.2/漫剧助手X-2_v1.0.2_Setup.exe",
+  "md5": "8e8228d1a08e9fc235c216e78abb255d",
+  "sha256": "e2ec479f3cb7b712a288b0f393d8b6697953ab65f14c098608ec702261ec97bc",
+  "size": 91185794,
   "changelog_url": "https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md",
   "release_date": "2026-07-09"
 }

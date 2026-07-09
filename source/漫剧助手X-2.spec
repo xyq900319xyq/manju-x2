@@ -14,7 +14,7 @@ a = Analysis(
     ['src\\main.py'],
     pathex=[SRC_DIR],
     binaries=[],
-    datas=[('resources', 'resources')],
+    datas=[('resources', 'resources'), ('assets', 'assets')],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},

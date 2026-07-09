@@ -43,7 +43,7 @@ from ui.project_tree import ProjectTree
 from ui.settings_dialog import SettingsDialog
 from ui.task_status import TaskStatusWidget
 
-APP_TITLE = "漫剧助手X-1 v0.7.8.85"
+APP_TITLE = "漫剧助手X-2"
 # ROOT 由 main.py 显式传入（支持 EXE 和源码两种模式）
 # 保留模块级占位，避免循环引用
 ROOT: Path = Path(__file__).resolve().parent.parent
