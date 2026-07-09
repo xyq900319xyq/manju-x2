@@ -1331,8 +1331,13 @@ class SettingsDialog(QDialog):
     def _on_save(self) -> None:
         # 1. 先把当前表单刷回 _data
         self._commit_form_to_data()
-        # 2. 校验：每个 config 必填字段非空
+        # 2. 校验：active config 必填字段非空（**不**遍历所有 config —
+        #    跟视频 API 行为一致：非 active 允许空,用户可同时维护
+        #    多个未完成的 config;真要调用时再报错）。
+        active_id = self._data.get("active", "")
         for i, c in enumerate(self._data["configs"]):
+            if c.get("id") != active_id:
+                continue
             missing = [
                 k for k in ("id", "name", "model", "base_url", "api_key")
                 if not str(c.get(k, "")).strip()
@@ -1341,10 +1346,12 @@ class SettingsDialog(QDialog):
                 QMessageBox.warning(
                     self,
                     "校验失败",
-                    f"第 {i + 1} 项缺少字段: {', '.join(missing)}",
+                    f"active config（第 {i + 1} 项 {c.get('name', c.get('id', '?'))}）"
+                    f"缺少字段: {', '.join(missing)}\n\n"
+                    f"无兜底硬约束：请主动填写后保存。",
                 )
                 return
-        if not self._data["active"]:
+        if not active_id:
             QMessageBox.warning(self, "校验失败", "未选择 active 配置")
             return
         if not any(c.get("id") == self._data["active"] for c in self._data["configs"]):
