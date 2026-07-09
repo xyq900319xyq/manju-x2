@@ -1,0 +1,21 @@
+v1.1.3.1 — 一键更新 404 修复(update.json url + .iss ASCII 化)
+
+## 修复
+- 一键更新下载 HTTPError 404 Not Found
+
+## 根因(两个 bug 叠加)
+1. build_x2.py 写 update.json url 字段时,tag 没加 v 前缀:写 `.../download/1.1.3/...`,
+   但 GitHub 实际 tag 是 `v1.1.3`,不带 v 前缀的 url → 404
+2. Setup.exe 文件名含中文"漫剧助手",GitHub R2 存储会截断成 `X-2_v1.1.3_Setup.exe`。
+   update.json 写的 url 仍是原文件名(`漫剧助手X-2_v1.1.3_Setup.exe`),跟真实 asset name 对不上 → 404
+
+## 改动(两层)
+- 立即修 release/update.json v1.1.3 url:改成真实 `https://github.com/.../download/v1.1.3/X-2_v1.1.3_Setup.exe`
+  (HEAD 200 + Content-Length 91187987 完全匹配本地装包)。老用户拉这个 update.json 即可一键更新
+- 永久修 installer/漫剧助手X-2.iss:`OutputBaseFilename=X-2_v{#MyAppVersion}_Setup`(纯 ASCII,GitHub 不截断)
+- 永久修 build_x2.py:url 字段加 v 前缀(`v{ver}`),v1.1.4+ 永久生效
+- docs/更新日志.md 加 v1.1.3.1 段
+
+## 验证
+- HEAD https://github.com/.../download/v1.1.3/X-2_v1.1.3_Setup.exe → 200
+- HEAD https://github.com/.../download/1.1.3/漫剧助手X-2_v1.1.3_Setup.exe → 404

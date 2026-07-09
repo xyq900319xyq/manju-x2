@@ -35,7 +35,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=no
 LicenseFile=D:\漫剧助手\manju-x2\docs\LICENSE.txt
 OutputDir=D:\漫剧助手\manju-x2\release
-OutputBaseFilename=漫剧助手X-2_v{#MyAppVersion}_Setup
+OutputBaseFilename=X-2_v{#MyAppVersion}_Setup
 ; v1.0.0 修:icon.ico 缺文件,默认用 Windows 默认图标(不引 SetupIconFile)
 ; 如需自定义图标,准备 installer\icon.ico 后再加: SetupIconFile=icon.ico
 Compression=lzma2/ultra64

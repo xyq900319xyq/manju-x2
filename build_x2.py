@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib.parse
 from pathlib import Path
 
 ROOT = Path(r'D:\漫剧助手\manju-x2')
@@ -175,11 +176,15 @@ def main():
         sha256 = hashlib.sha256(data).hexdigest()
         update = {
             'version': ver,
-            'url': f'https://github.com/xyq900319xyq/manju-x2/releases/download/{ver}/{latest.name}',
+            # v1.1.3.1:tag 必带 v 前缀(实际 GitHub tag 是 "v1.1.3"),
+            # 否则 .../download/1.1.3/... 404
+            'url': f'https://github.com/xyq900319xyq/manju-x2/releases/download/v{ver}/{urllib.parse.quote(latest.name, safe="")}',
             'md5': md5,
             'sha256': sha256,
             'size': latest.stat().st_size,
-            'changelog_url': 'https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md',
+            # v1.1.3:改纯英文 URL(原 docs/更新日志.md 含中文,Qt 弹
+            # QMessageBox 时 native MessageBox 用 ascii 编码会爆)。
+            'changelog_url': 'https://github.com/xyq900319xyq/manju-x2/releases',
             'release_date': datetime.date.today().isoformat(),
         }
         (RELEASE / 'update.json').write_text(json.dumps(update, ensure_ascii=False, indent=2), encoding='utf-8')
