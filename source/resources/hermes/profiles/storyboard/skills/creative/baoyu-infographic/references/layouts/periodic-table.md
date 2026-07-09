@@ -1,4 +1,4 @@
-# periodic-table
+﻿# periodic-table
 
 Grid of categorized elements with consistent cell formatting.
 

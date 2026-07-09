@@ -1,4 +1,4 @@
----
+﻿---
 name: novel-screenplay-adaptation
 description: 小说改编顶级剧本 — 从小说到可拍摄剧本的完整改编方法论。集成 StudioBinder 7步改编法 + Blake Snyder 15拍节拍表 + 中文短剧适配。对接现有 storyboard → asset-designer → Seedance 流水线。
 triggers:

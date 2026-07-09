@@ -1,4 +1,4 @@
-# Production Quality Checklist
+﻿# Production Quality Checklist
 
 Standards and checks for ensuring animation output is publication-ready.
 

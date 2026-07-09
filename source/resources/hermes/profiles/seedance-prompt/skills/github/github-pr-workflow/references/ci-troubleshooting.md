@@ -1,4 +1,4 @@
-# CI Troubleshooting Quick Reference
+﻿# CI Troubleshooting Quick Reference
 
 Common CI failure patterns and how to diagnose them from the logs.
 

@@ -1,4 +1,4 @@
-# elegant
+﻿# elegant
 
 Refined, sophisticated illustration style for professional content
 

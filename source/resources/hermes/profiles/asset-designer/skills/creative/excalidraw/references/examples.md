@@ -1,4 +1,4 @@
-# Excalidraw Diagram Examples
+﻿# Excalidraw Diagram Examples
 
 Complete, copy-pasteable examples. Wrap each in the `.excalidraw` envelope before saving:
 

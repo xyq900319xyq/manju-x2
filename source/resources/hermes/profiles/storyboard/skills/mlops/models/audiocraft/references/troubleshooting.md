@@ -1,4 +1,4 @@
-# AudioCraft Troubleshooting Guide
+﻿# AudioCraft Troubleshooting Guide
 
 ## Installation Issues
 

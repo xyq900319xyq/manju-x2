@@ -1,4 +1,4 @@
-# DB Path Fallback (2026-06-23)
+﻿# DB Path Fallback (2026-06-23)
 
 ## Problem
 `_data_dir` relied on `USER_DATA` env var. On Chinese Windows, env vars with Chinese characters can get corrupted or lost, causing the server to fall back to `%APPDATA%/Juben/` instead of the project directory. This resulted in empty data (DB existed but was empty).

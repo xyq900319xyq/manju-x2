@@ -1,4 +1,4 @@
-# Animation
+﻿# Animation
 
 ## Frame-Based Animation
 

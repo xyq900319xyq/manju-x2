@@ -1,4 +1,4 @@
-# DSPy Optimizers (Teleprompters)
+﻿# DSPy Optimizers (Teleprompters)
 
 Complete guide to DSPy's optimization algorithms for improving prompts and model weights.
 

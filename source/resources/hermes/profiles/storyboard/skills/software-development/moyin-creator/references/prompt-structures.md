@@ -1,4 +1,4 @@
-# Prompt Templates — 魔因漫创
+﻿# Prompt Templates — 魔因漫创
 
 Full prompt templates extracted from source code analysis.
 

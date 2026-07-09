@@ -1,4 +1,4 @@
-# Design System: Intercom
+﻿# Design System: Intercom
 
 
 > **Hermes Agent — Implementation Notes**

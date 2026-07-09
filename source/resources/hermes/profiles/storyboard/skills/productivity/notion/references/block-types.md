@@ -1,4 +1,4 @@
-# Notion Block Types
+﻿# Notion Block Types
 
 Reference for creating and reading all common Notion block types via the API.
 

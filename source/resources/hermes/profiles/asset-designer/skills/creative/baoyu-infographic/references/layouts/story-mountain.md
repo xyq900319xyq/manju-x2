@@ -1,4 +1,4 @@
-# story-mountain
+﻿# story-mountain
 
 Plot structure visualization showing rising action, climax, and resolution.
 

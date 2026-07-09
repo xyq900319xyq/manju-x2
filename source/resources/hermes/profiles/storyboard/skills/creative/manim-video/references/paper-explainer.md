@@ -1,4 +1,4 @@
-# Paper Explainer Workflow
+﻿# Paper Explainer Workflow
 
 How to turn a research paper into an animated explainer video.
 

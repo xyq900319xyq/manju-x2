@@ -1,4 +1,4 @@
-# Auto-Update pyc Magic Number Bug
+﻿# Auto-Update pyc Magic Number Bug
 
 ## The Bug
 

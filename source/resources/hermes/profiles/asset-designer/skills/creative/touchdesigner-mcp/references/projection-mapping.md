@@ -1,4 +1,4 @@
-# Projection Mapping Reference
+﻿# Projection Mapping Reference
 
 Multi-window output, surface mapping, edge blending, and projector calibration patterns for installation/event work.
 

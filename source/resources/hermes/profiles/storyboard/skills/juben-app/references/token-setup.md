@@ -1,4 +1,4 @@
-# GitHub Token Setup for Activation System
+﻿# GitHub Token Setup for Activation System
 
 ## Token Requirements
 - **Type**: Classic token (NOT Fine-grained)

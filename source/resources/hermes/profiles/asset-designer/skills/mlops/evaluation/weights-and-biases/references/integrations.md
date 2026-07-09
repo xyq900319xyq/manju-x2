@@ -1,4 +1,4 @@
-# Framework Integrations Guide
+﻿# Framework Integrations Guide
 
 Complete guide to integrating W&B with popular ML frameworks.
 

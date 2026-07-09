@@ -1,4 +1,4 @@
----
+﻿---
 name: llama-cpp
 description: llama.cpp local GGUF inference + HF Hub model discovery.
 version: 2.1.2

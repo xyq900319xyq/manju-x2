@@ -1,4 +1,4 @@
----
+﻿---
 name: blogwatcher
 description: "Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool."
 version: 2.0.0

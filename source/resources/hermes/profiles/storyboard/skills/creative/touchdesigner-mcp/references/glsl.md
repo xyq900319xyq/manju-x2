@@ -1,4 +1,4 @@
-# GLSL Reference
+﻿# GLSL Reference
 
 ## Uniforms
 

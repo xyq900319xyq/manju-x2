@@ -1,4 +1,4 @@
-# MIDI / OSC Reference
+﻿# MIDI / OSC Reference
 
 External controller input and output — MIDI hardware, TouchOSC mobile UIs, OSC routing across the network.
 

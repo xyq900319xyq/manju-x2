@@ -1,4 +1,4 @@
-# waoowaoo Deployment Reference
+﻿# waoowaoo Deployment Reference
 
 ## Service stack
 ```yaml

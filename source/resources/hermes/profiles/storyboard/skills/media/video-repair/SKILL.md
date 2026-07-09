@@ -1,4 +1,4 @@
----
+﻿---
 name: video-repair
 description: Diagnose and fix video files rejected by editors (剪映/CapCut, Premiere, DaVinci) that play fine in media players. Covers container issues, non-standard metadata, timebase mismatches, and broken atoms — not encoding problems.
 ---

@@ -1,4 +1,4 @@
-# Extracting AI Prompts from Moyin Creator Source Code
+﻿# Extracting AI Prompts from Moyin Creator Source Code
 
 ## When to use this technique
 

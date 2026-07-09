@@ -1,4 +1,4 @@
-# comparison-matrix
+﻿# comparison-matrix
 
 Grid-based multi-factor comparison across multiple items.
 

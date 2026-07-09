@@ -1,4 +1,4 @@
-# Debugging Electron Apps: Asar, State Files, and Compiled Code
+﻿# Debugging Electron Apps: Asar, State Files, and Compiled Code
 
 Techniques for investigating bugs in packaged Electron applications where the source
 runs inside an `app.asar` archive and state is scattered across SQLite databases,

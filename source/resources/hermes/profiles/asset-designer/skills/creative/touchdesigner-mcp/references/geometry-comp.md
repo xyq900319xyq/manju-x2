@@ -1,4 +1,4 @@
-# Geometry COMP Reference
+﻿# Geometry COMP Reference
 
 ## Creating Geometry COMPs
 

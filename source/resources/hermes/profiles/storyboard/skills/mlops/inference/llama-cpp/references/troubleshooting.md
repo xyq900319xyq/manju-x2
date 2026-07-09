@@ -1,4 +1,4 @@
-# GGUF Troubleshooting Guide
+﻿# GGUF Troubleshooting Guide
 
 ## Installation Issues
 

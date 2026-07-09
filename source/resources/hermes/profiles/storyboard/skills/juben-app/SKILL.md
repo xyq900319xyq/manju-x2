@@ -1,4 +1,4 @@
----
+﻿---
 name: juben-app
 description: Maintain and package the 剧本分镜助手 application — EXE builds, activation, GitHub integration, and Hermes profile management.
 category: devops

@@ -1,4 +1,4 @@
-# WSL Electron Development Setup
+﻿# WSL Electron Development Setup
 
 Running Electron apps in WSL requires X server support and system libraries.
 

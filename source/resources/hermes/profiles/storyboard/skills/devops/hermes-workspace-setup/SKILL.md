@@ -1,4 +1,4 @@
----
+﻿---
 name: hermes-workspace-setup
 description: "Deploy and troubleshoot Hermes Workspace (Web UI) on WSL with Gateway API connectivity."
 version: 1.0.0

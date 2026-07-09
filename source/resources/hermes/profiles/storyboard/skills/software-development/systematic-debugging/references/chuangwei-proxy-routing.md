@@ -1,4 +1,4 @@
-# Chuangwei.cyou API Proxy: Endpoint & Auth Overrides
+﻿# Chuangwei.cyou API Proxy: Endpoint & Auth Overrides
 
 Discovered during debugging of 魔因漫创 (moyin-creator) S-class nine-grid board generation.
 

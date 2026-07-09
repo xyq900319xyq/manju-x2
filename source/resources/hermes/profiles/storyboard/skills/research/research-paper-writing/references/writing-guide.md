@@ -1,4 +1,4 @@
-# ML Paper Writing Philosophy & Best Practices
+﻿# ML Paper Writing Philosophy & Best Practices
 
 This reference compiles writing advice from prominent ML researchers including Neel Nanda, Andrej Karpathy, Sebastian Farquhar, Zachary Lipton, and Jacob Steinhardt.
 

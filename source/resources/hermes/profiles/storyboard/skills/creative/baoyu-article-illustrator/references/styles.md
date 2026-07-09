@@ -1,4 +1,4 @@
-# Style Reference
+﻿# Style Reference
 
 ## Core Styles
 

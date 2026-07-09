@@ -1,4 +1,4 @@
----
+﻿---
 name: electron-app-analysis
 description: Use when analyzing packaged Electron desktop apps to understand their architecture, API endpoints, prompt compilation, data storage, and runtime behavior. Covers asar extraction, SQLite forensics, bundled JS tracing, and proxy-chain mapping.
 version: 1.0.0

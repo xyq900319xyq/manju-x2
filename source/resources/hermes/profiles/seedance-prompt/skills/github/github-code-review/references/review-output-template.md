@@ -1,4 +1,4 @@
-# Review Output Template
+﻿# Review Output Template
 
 Use this as the structure for PR review summary comments. Copy and fill in the sections.
 

@@ -1,4 +1,4 @@
-# Segment Anything Advanced Usage Guide
+﻿# Segment Anything Advanced Usage Guide
 
 ## SAM 2 (Video Segmentation)
 

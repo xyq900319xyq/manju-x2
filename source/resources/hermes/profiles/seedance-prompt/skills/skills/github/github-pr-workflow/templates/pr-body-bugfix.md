@@ -1,4 +1,4 @@
-## Bug Description
+﻿## Bug Description
 
 <!-- What was happening? -->
 

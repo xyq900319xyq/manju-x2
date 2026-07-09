@@ -1,4 +1,4 @@
-# dense
+﻿# dense
 
 Information-rich, educational focus
 

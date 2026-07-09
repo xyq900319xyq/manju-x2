@@ -1,4 +1,4 @@
-# Segment Anything Troubleshooting Guide
+﻿# Segment Anything Troubleshooting Guide
 
 ## Installation Issues
 

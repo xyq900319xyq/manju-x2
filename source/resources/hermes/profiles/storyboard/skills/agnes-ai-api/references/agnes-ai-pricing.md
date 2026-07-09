@@ -1,4 +1,4 @@
-## Session: Agnes AI Model Configuration & Troubleshooting
+﻿## Session: Agnes AI Model Configuration & Troubleshooting
 
 **Date:** 2026-06-14
 **Session ID:** current

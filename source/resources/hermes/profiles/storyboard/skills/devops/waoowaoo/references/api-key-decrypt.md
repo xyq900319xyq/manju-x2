@@ -1,4 +1,4 @@
-# waoowaoo API Key 解密
+﻿# waoowaoo API Key 解密
 
 waoowaoo 将用户的 API Key 用 AES-256-GCM 加密存储在 `user_preferences.customProviders` (JSON 中的 `apiKey` 字段)。
 

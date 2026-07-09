@@ -1,4 +1,4 @@
-# energetic
+﻿# energetic
 
 活力基调 - Bright, dynamic, exciting
 

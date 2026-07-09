@@ -1,4 +1,4 @@
-Create a cartoon-style infographic illustration following these guidelines:
+﻿Create a cartoon-style infographic illustration following these guidelines:
 
 ## Image Specifications
 

@@ -1,4 +1,4 @@
-# Episode Creation & Storyboard Generation Debug Trail
+﻿# Episode Creation & Storyboard Generation Debug Trail
 
 ## Error Chain (in order of discovery)
 

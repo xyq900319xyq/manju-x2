@@ -1,4 +1,4 @@
-# sketch-notes
+﻿# sketch-notes
 
 Soft hand-drawn illustration style with warm, educational feel
 

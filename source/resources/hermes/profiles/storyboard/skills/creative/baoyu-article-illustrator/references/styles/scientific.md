@@ -1,4 +1,4 @@
-# scientific
+﻿# scientific
 
 Academic scientific illustration style for technical diagrams and processes
 

@@ -1,4 +1,4 @@
-# Webhook Subscriptions
+﻿# Webhook Subscriptions
 
 Create dynamic webhook subscriptions so external services (GitHub, GitLab, Stripe, CI/CD, IoT sensors, monitoring tools) can trigger Hermes agent runs by POSTing events to a URL.
 

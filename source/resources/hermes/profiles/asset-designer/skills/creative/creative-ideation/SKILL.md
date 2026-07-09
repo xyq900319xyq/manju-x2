@@ -1,4 +1,4 @@
----
+﻿---
 name: ideation
 title: Creative Ideation — Constraint-Driven Project Generation
 description: "Generate project ideas via creative constraints."

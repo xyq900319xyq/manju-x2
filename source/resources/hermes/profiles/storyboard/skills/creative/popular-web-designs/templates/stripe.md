@@ -1,4 +1,4 @@
-# Design System: Stripe
+﻿# Design System: Stripe
 
 
 > **Hermes Agent — Implementation Notes**

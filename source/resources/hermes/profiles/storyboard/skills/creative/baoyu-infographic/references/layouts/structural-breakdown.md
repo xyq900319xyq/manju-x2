@@ -1,4 +1,4 @@
-# structural-breakdown
+﻿# structural-breakdown
 
 Internal structure visualization with labeled parts or layers.
 

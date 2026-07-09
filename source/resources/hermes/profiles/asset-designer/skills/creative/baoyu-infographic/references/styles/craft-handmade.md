@@ -1,4 +1,4 @@
-# craft-handmade (DEFAULT)
+﻿# craft-handmade (DEFAULT)
 
 Hand-drawn and paper craft aesthetic with warm, organic feel.
 

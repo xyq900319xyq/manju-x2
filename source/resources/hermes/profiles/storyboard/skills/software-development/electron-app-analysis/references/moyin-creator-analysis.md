@@ -1,4 +1,4 @@
-# Moyin Creator (魔因漫创) — Complete Analysis
+﻿# Moyin Creator (魔因漫创) — Complete Analysis
 
 > Reference for `electron-app-analysis` skill. Session: 2026-05-20.
 

@@ -1,4 +1,4 @@
-# Decorations and Visual Polish
+﻿# Decorations and Visual Polish
 
 Decorations are mobjects that annotate, highlight, or frame other mobjects. They turn a technically correct animation into a visually polished one.
 

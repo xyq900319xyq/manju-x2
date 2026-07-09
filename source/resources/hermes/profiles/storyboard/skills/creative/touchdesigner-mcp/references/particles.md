@@ -1,4 +1,4 @@
-# Particles Reference
+﻿# Particles Reference
 
 Particle systems in TouchDesigner — modern POPs (Particle Operators) and the legacy particleSOP path.
 

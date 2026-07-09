@@ -1,4 +1,4 @@
-# Multi-Agent API Switching (v2)
+﻿# Multi-Agent API Switching (v2)
 
 ## Architecture
 - `hermes_api.json` in USER_DATA stores multiple configs + active ID

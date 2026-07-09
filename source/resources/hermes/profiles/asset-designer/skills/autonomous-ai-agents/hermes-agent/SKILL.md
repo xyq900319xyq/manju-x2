@@ -1,4 +1,4 @@
----
+﻿---
 name: hermes-agent
 description: "Configure, extend, or contribute to Hermes Agent."
 version: 2.3.0

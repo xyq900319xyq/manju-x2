@@ -1,4 +1,4 @@
-# Embedded Python Setup for 剧本分镜助手
+﻿# Embedded Python Setup for 剧本分镜助手
 
 ## Problem
 The Python `python-3.11.9-embed-amd64.zip` from python.org is a minimal distribution that lacks:

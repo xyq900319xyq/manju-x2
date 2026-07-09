@@ -1,4 +1,4 @@
-# 魔因漫创 (moyin-creator) — App-Specific Reference
+﻿# 魔因漫创 (moyin-creator) — App-Specific Reference
 
 ## File Paths
 

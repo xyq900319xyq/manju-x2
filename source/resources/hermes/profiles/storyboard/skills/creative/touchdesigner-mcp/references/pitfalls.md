@@ -1,4 +1,4 @@
-# TouchDesigner MCP — Pitfalls & Lessons Learned
+﻿# TouchDesigner MCP — Pitfalls & Lessons Learned
 
 Hard-won knowledge from real TD sessions. Read this before building anything.
 

@@ -1,4 +1,4 @@
-"""漫剧助手X-2 打包脚本。
+﻿"""漫剧助手X-2 打包脚本。
 
 把 D:\\漫剧助手\\manju-x2\\source\\ 用 PyInstaller 打成 EXE,
 然后调 Inno Setup 编译 .iss 出 Setup.exe。
@@ -174,11 +174,11 @@ def main():
         sha256 = hashlib.sha256(data).hexdigest()
         update = {
             'version': ver,
-            'url': f'https://github.com/<your-org>/manju-x2/releases/download/{ver}/{latest.name}',
+            'url': f'https://github.com/xyq900319xyq/manju-x2/releases/download/{ver}/{latest.name}',
             'md5': md5,
             'sha256': sha256,
             'size': latest.stat().st_size,
-            'changelog_url': 'https://github.com/<your-org>/manju-x2/blob/main/docs/更新日志.md',
+            'changelog_url': 'https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md',
             'release_date': '2026-07-08',
         }
         (RELEASE / 'update.json').write_text(json.dumps(update, ensure_ascii=False, indent=2), encoding='utf-8')

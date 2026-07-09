@@ -1,4 +1,4 @@
----
+﻿---
 name: writing-plans
 description: "Write implementation plans: bite-sized tasks, paths, code."
 version: 1.1.0

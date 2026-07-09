@@ -1,4 +1,4 @@
----
+﻿---
 name: heartmula
 description: "HeartMuLa: Suno-like song generation from lyrics + tags."
 version: 1.0.0

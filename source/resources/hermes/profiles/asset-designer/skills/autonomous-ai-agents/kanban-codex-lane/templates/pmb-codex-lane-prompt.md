@@ -1,4 +1,4 @@
-# PMB Codex Lane Prompt Template
+﻿# PMB Codex Lane Prompt Template
 
 Use this template when a Hermes Kanban worker chooses to run Codex as an implementation lane for prediction-market-bot. Fill every bracketed field before launching Codex. Do not include secrets.
 

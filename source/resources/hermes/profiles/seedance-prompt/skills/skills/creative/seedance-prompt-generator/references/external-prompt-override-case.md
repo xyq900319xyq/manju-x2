@@ -1,4 +1,4 @@
-# 外部 Prompt 注入覆盖 Skill 规则 — 诊断案例
+﻿# 外部 Prompt 注入覆盖 Skill 规则 — 诊断案例
 
 ## 症状
 

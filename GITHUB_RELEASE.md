@@ -1,4 +1,4 @@
-# GitHub 发版操作指南 (Phase 7 v1.0.0)
+﻿# GitHub 发版操作指南 (Phase 7 v1.0.0)
 
 > 目标:把 `D:\漫剧助手\manju-x2\` 推到 GitHub 公开 repo,发第一个 v1.0.0 release,让用户能下载 Setup.exe + 软件能自动检查更新。
 
@@ -26,19 +26,19 @@
    - **Public** (重要!Private 用户无法下载)
    - **不要**勾 "Initialize this repository with a README"(我们要自己推)
 4. 点 `Create repository`
-5. 记下 URL:`https://github.com/<your-org>/manju-x2.git`(把 `<your-org>` 替换成你的 GitHub 用户名/org 名)
+5. 记下 URL:`https://github.com/xyq900319xyq/manju-x2.git`(把 `xyq900319xyq` 替换成你的 GitHub 用户名/org 名)
 
-> **`<your-org>` 占位符**: 下面所有命令和文件里的 `<your-org>` 都要替换成你的实际 GitHub 用户名/org 名(小写)。
+> **`xyq900319xyq` 占位符**: 下面所有命令和文件里的 `xyq900319xyq` 都要替换成你的实际 GitHub 用户名/org 名(小写)。
 
 ---
 
-## 步骤 2: 替换 `<your-org>` 占位符
+## 步骤 2: 替换 `xyq900319xyq` 占位符
 
 ### 2.1 `build_x2.py`(line 177 / 181)
 当前:
 ```python
-'url': f'https://github.com/<your-org>/manju-x2/releases/download/{ver}/{latest.name}',
-'changelog_url': 'https://github.com/<your-org>/manju-x2/blob/main/docs/更新日志.md',
+'url': f'https://github.com/xyq900319xyq/manju-x2/releases/download/{ver}/{latest.name}',
+'changelog_url': 'https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md',
 ```
 改成你的实际 GitHub 用户名(假设是 `xiaoyu`):
 ```python
@@ -49,7 +49,7 @@
 ### 2.2 `installer\漫剧助手X-2.iss`(line 22)
 当前:
 ```ini
-#define MyAppURL "https://github.com/<your-org>/manju-x2"
+#define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 ```
 改成:
 ```ini
@@ -70,7 +70,7 @@ python build_x2.py
 ### 2.5 `source\src\core\updater.py`
 当前:
 ```python
-DEFAULT_GITHUB_REPO = os.environ.get("MANJU_X2_GITHUB_REPO", "<your-org>/manju-x2")
+DEFAULT_GITHUB_REPO = os.environ.get("MANJU_X2_GITHUB_REPO", "xyq900319xyq/manju-x2")
 ```
 改:
 ```python

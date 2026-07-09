@@ -1,4 +1,4 @@
-# Core API Reference
+﻿# Core API Reference
 
 ## Canvas Setup
 

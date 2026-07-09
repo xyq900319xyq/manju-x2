@@ -1,4 +1,4 @@
-# Animation Reference
+﻿# Animation Reference
 
 Patterns for time-based motion — keyframes, LFOs, timers, easing, expression-driven animation.
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: seedance-prompt-generator
 description: "Seedance 2.0 视频提示词生成 — 将分镜脚本+资产设计转化为 Director Angel 编译格式的视频生成指令"
 version: 3.0.0

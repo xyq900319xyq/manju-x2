@@ -1,4 +1,4 @@
-# Troubleshooting Reference
+﻿# Troubleshooting Reference
 
 > **See also:** composition.md · architecture.md · shaders.md · scenes.md · optimization.md
 

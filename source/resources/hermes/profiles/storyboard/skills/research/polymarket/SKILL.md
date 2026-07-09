@@ -1,4 +1,4 @@
----
+﻿---
 name: polymarket
 description: "Query Polymarket: markets, prices, orderbooks, history."
 version: 1.0.0

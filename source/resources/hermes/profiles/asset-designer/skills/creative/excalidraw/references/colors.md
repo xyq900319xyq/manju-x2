@@ -1,4 +1,4 @@
-# Excalidraw Color Palette
+﻿# Excalidraw Color Palette
 
 Use these colors consistently across diagrams.
 

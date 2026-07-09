@@ -1,4 +1,4 @@
-# Audio-Reactive Reference
+﻿# Audio-Reactive Reference
 
 Patterns for driving visuals from audio — spectrum analysis, beat detection, envelope following.
 

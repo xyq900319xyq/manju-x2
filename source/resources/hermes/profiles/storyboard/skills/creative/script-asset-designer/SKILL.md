@@ -1,4 +1,4 @@
----
+﻿---
 name: script-asset-designer
 description: "从剧本中提取人物、场景、物品资产，并设计全中文AI生图指令词。"
 version: 2.2.0

@@ -1,4 +1,4 @@
-# 漫剧助手X-2 干净 VM 测试清单
+﻿# 漫剧助手X-2 干净 VM 测试清单
 
 > **目标**: 在干净 Win10/11 VM(无 Python / 无 manju / 无 hermes)上测完整装/用/卸流程,确保用户拿 Setup.exe 装能用。
 > **环境要求**: Win10 1809+ 或 Win11 22H2+,x64,4GB+ RAM,能联网。
@@ -174,7 +174,7 @@ Get-Content "C:\漫剧助手X-2\config\secrets.bin" -Encoding Byte | Select-Obje
 ### 前置
 - user 已按 `GITHUB_RELEASE.md` 7 步发 v1.0.0
 - GitHub 上有 `v1.0.0` release + 3 个附件(Setup.exe + md5 + sha256)
-- `<your-org>` 占位符已替换成 user 实际 GitHub org
+- `xyq900319xyq` 占位符已替换成 user 实际 GitHub org
 
 ### 步骤
 1. 装好的 v1.0.0 启动
@@ -201,7 +201,7 @@ Get-Content "C:\漫剧助手X-2\config\.update_check_cache.json"  # 看里面 JS
 ### 失败排查
 - 没拉: 防火墙拦 GitHub API
 - 红点不显示: 看 `C:\漫剧助手X-2\logs\manju-最新.log` 搜 "update"
-- 跳错页: `build_x2.py` line 177 URL 写错(`<your-org>` 没替换)
+- 跳错页: `build_x2.py` line 177 URL 写错(`xyq900319xyq` 没替换)
 
 ---
 

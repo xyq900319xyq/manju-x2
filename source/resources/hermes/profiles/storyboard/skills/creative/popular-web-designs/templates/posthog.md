@@ -1,4 +1,4 @@
-# Design System: PostHog
+﻿# Design System: PostHog
 
 
 > **Hermes Agent — Implementation Notes**

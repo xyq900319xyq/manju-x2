@@ -1,4 +1,4 @@
-# Polymarket API Endpoints Reference
+﻿# Polymarket API Endpoints Reference
 
 All endpoints are public REST (GET), return JSON, and need no authentication.
 

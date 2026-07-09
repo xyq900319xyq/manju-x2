@@ -1,4 +1,4 @@
-# Ohmsha Manga Guide Style
+﻿# Ohmsha Manga Guide Style
 
 Guidelines for educational manga comics using the `ohmsha` preset.
 

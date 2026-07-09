@@ -1,4 +1,4 @@
-# 漫剧助手X-2 发版前后指南
+﻿# 漫剧助手X-2 发版前后指南
 
 > 配套 `GITHUB_RELEASE.md`(发版操作步骤)。
 > 本文档覆盖:**发版前**(social 营销) + **发版后**(24h/7d/30d 监控 + 应急响应)。
@@ -25,9 +25,9 @@ AI 漫剧创作助手用户版,1 个 Setup.exe 全搞定(91 MB,无需 Python,无
 - 免 UAC 安装,默认装到 C:\漫剧助手X-2\
 - 零开发数据泄漏(物理隔离)
 
-📥 下载:https://github.com/<your-org>/manju-x2/releases/latest
-📖 文档:https://github.com/<your-org>/manju-x2/blob/main/docs/INSTALL.md
-💬 反馈:https://github.com/<your-org>/manju-x2/issues
+📥 下载:https://github.com/xyq900319xyq/manju-x2/releases/latest
+📖 文档:https://github.com/xyq900319xyq/manju-x2/blob/main/docs/INSTALL.md
+💬 反馈:https://github.com/xyq900319xyq/manju-x2/issues
 
 #AI创作 #漫剧 #分镜 #视频生成
 ```
@@ -39,7 +39,7 @@ AI 漫剧创作助手用户版,1 个 Setup.exe 全搞定(91 MB,无需 Python,无
 1 个 Setup.exe 装好就用,AI 生成分镜/视频提示词
 支持 DeepSeek/Agnes/创维中转,免 UAC 装
 API key Windows DPAPI 加密
-下载 → github.com/<your-org>/manju-x2/releases/latest
+下载 → github.com/xyq900319xyq/manju-x2/releases/latest
 
 #AI漫剧# #视频生成# #开源软件#
 ```
@@ -53,7 +53,7 @@ AI manga drama creation tool - Windows only, single Setup.exe (91 MB).
 Generate storyboards & video prompts from plot outlines.
 Supports DeepSeek/Agnes, DPAPI encryption for API keys.
 
-Download: https://github.com/<your-org>/manju-x2/releases/latest
+Download: https://github.com/xyq900319xyq/manju-x2/releases/latest
 
 #AI #storyboard #opensource
 ```
@@ -93,7 +93,7 @@ Download: https://github.com/<your-org>/manju-x2/releases/latest
 
 ## 下载
 
-https://github.com/<your-org>/manju-x2/releases/latest
+https://github.com/xyq900319xyq/manju-x2/releases/latest
 
 ## 反馈
 
@@ -132,7 +132,7 @@ https://github.com/<your-org>/manju-x2/releases/latest
 [文字叠加]
 "漫剧助手X-2"
 "AI 漫剧创作助手"
-"github.com/<your-org>/manju-x2"
+"github.com/xyq900319xyq/manju-x2"
 ```
 
 ### 6. 简评类(少数派 / V2EX / 即刻)
@@ -152,7 +152,7 @@ https://github.com/<your-org>/manju-x2/releases/latest
 
 代码全开源(用户版),dev 端商业版另算。
 
-GitHub: https://github.com/<your-org>/manju-x2
+GitHub: https://github.com/xyq900319xyq/manju-x2
 
 欢迎 PR / Issue。
 ```
@@ -359,13 +359,13 @@ GitHub: https://github.com/<your-org>/manju-x2
 发版后第一件事:把这些链接加到 release description + 群置顶:
 
 ```
-📥 下载: https://github.com/<your-org>/manju-x2/releases/latest
-📖 文档: https://github.com/<your-org>/manju-x2/blob/main/docs/INSTALL.md
-❓ FAQ: https://github.com/<your-org>/manju-x2/blob/main/docs/FAQ.md
-📋 更新日志: https://github.com/<your-org>/manju-x2/blob/main/docs/更新日志.md
-🐛 反馈: https://github.com/<your-org>/manju-x2/issues
-💬 讨论: https://github.com/<your-org>/manju-x2/discussions(可选)
-🔒 安全: https://github.com/<your-org>/manju-x2/security/advisories/new
+📥 下载: https://github.com/xyq900319xyq/manju-x2/releases/latest
+📖 文档: https://github.com/xyq900319xyq/manju-x2/blob/main/docs/INSTALL.md
+❓ FAQ: https://github.com/xyq900319xyq/manju-x2/blob/main/docs/FAQ.md
+📋 更新日志: https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md
+🐛 反馈: https://github.com/xyq900319xyq/manju-x2/issues
+💬 讨论: https://github.com/xyq900319xyq/manju-x2/discussions(可选)
+🔒 安全: https://github.com/xyq900319xyq/manju-x2/security/advisories/new
 ```
 
 ---

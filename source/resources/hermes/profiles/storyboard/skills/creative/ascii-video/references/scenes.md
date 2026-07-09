@@ -1,4 +1,4 @@
-# Scene System & Creative Composition
+﻿# Scene System & Creative Composition
 
 > **See also:** architecture.md · composition.md · effects.md · shaders.md
 

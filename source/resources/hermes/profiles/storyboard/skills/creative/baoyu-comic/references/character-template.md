@@ -1,4 +1,4 @@
-# Character Definition Template
+﻿# Character Definition Template
 
 ## Character Document Format
 

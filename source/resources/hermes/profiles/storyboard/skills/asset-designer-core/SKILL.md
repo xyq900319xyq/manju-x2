@@ -1,4 +1,4 @@
----
+﻿---
 name: asset-designer-core
 description: "剧本资产设计助手核心 skill — 从剧本提取人物、场景、物品，生成魔因格式AI生图指令词"
 version: 1.0.0

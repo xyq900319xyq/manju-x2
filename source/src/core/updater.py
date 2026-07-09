@@ -1,4 +1,4 @@
-"""v1.0.0 用户版：启动后台检查 GitHub releases 有无新版。
+﻿"""v1.0.0 用户版：启动后台检查 GitHub releases 有无新版。
 
 设计要点（v1.0.0 用户版）：
 - 后台 QThread 拉 GitHub `releases/latest` API（超时 10 秒）
@@ -33,7 +33,7 @@ from PySide6.QtCore import QObject, QThread, Signal
 log = logging.getLogger("manju.updater")
 
 # GitHub repo 占位符（Phase 7 发版前用环境变量覆盖）
-DEFAULT_GITHUB_REPO = os.environ.get("MANJU_X2_GITHUB_REPO", "<your-org>/manju-x2")
+DEFAULT_GITHUB_REPO = os.environ.get("MANJU_X2_GITHUB_REPO", "xyq900319xyq/manju-x2")
 GITHUB_API_LATEST = "https://api.github.com/repos/{repo}/releases/latest"
 CACHE_FILENAME = ".update_check_cache.json"
 CACHE_TTL_SECONDS = 24 * 3600  # 24h

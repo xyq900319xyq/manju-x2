@@ -1,4 +1,4 @@
-# Hermes Agent CLI Invocation & GBK Encoding Fix
+﻿# Hermes Agent CLI Invocation & GBK Encoding Fix
 
 ## The GBK UnicodeDecodeError Problem (CRITICAL)
 

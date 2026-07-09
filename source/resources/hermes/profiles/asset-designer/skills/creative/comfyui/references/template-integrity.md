@@ -1,4 +1,4 @@
-# ComfyUI Workflow-Template Integrity
+﻿# ComfyUI Workflow-Template Integrity
 
 > **Authored by [@purzbeats](https://github.com/purzbeats)** — adapted from
 > [purzbeats/hermes-agent-comfyui-helper](https://github.com/purzbeats/hermes-agent-comfyui-helper).

@@ -1,4 +1,4 @@
-# Animations Reference
+﻿# Animations Reference
 
 ## Core Concept
 

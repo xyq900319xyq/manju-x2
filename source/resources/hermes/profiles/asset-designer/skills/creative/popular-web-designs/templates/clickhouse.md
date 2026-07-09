@@ -1,4 +1,4 @@
-# Design System: ClickHouse
+﻿# Design System: ClickHouse
 
 
 > **Hermes Agent — Implementation Notes**

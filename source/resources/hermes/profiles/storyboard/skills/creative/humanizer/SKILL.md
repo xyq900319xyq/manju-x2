@@ -1,4 +1,4 @@
----
+﻿---
 name: humanizer
 description: "Humanize text: strip AI-isms and add real voice."
 version: 2.5.1

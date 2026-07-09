@@ -1,4 +1,4 @@
-# Complete Workflow
+﻿# Complete Workflow
 
 Full workflow for generating knowledge comics.
 

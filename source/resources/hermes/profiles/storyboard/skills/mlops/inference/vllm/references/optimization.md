@@ -1,4 +1,4 @@
-# Performance Optimization
+﻿# Performance Optimization
 
 ## Contents
 - PagedAttention explained

@@ -1,4 +1,4 @@
-# Hugging Face URL Workflows for llama.cpp
+﻿# Hugging Face URL Workflows for llama.cpp
 
 Use URL-only workflows first. Do not require `hf` or API clients just to find GGUF files, choose a quant, or build a `llama-server` command.
 

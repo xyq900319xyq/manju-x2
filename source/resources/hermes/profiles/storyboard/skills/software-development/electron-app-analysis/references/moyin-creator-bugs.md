@@ -1,4 +1,4 @@
-# Moyin Creator — Bugs Found & Fixes
+﻿# Moyin Creator — Bugs Found & Fixes
 
 > Session: 2026-05-20. Part of `electron-app-analysis` skill.
 

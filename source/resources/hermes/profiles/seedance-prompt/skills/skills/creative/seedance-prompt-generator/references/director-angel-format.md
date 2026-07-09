@@ -1,4 +1,4 @@
-# Director Angel 编译格式 — 完整字段说明
+﻿# Director Angel 编译格式 — 完整字段说明
 
 Seedance 2.0 视频生成的实际 API 请求通过 Director Angel 编译。以下为完整字段逐项说明。
 

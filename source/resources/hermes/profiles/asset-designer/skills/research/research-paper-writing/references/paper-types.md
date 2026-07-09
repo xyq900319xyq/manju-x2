@@ -1,4 +1,4 @@
-# Paper Types Beyond Empirical ML
+﻿# Paper Types Beyond Empirical ML
 
 Guide for writing non-standard paper types: theory papers, survey/tutorial papers, benchmark/dataset papers, and position papers. Each type has distinct structure, evidence standards, and venue expectations.
 

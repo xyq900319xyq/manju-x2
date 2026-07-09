@@ -1,4 +1,4 @@
-# Conventional Commits Quick Reference
+﻿# Conventional Commits Quick Reference
 
 Format: `type(scope): description`
 

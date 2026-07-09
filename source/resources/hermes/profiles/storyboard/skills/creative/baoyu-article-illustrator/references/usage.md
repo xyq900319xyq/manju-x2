@@ -1,4 +1,4 @@
-# Usage
+﻿# Usage
 
 This skill is triggered by natural language in Hermes — no slash command or CLI flags.
 

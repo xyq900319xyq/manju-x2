@@ -1,4 +1,4 @@
-# 魔因漫创 剧本导入格式完整参考
+﻿# 魔因漫创 剧本导入格式完整参考
 
 > 来源：`docs/SCRIPT_FORMAT_EXAMPLE.md` in the moyin-creator repo
 

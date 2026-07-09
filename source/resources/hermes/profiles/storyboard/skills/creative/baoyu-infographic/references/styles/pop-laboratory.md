@@ -1,4 +1,4 @@
-# pop-laboratory
+﻿# pop-laboratory
 
 Lab manual precision meets pop art color impact—coordinate systems, technical diagrams, and fluorescent accents on blueprint grid.
 

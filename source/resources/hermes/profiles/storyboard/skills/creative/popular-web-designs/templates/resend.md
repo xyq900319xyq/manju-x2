@@ -1,4 +1,4 @@
-# Design System: Resend
+﻿# Design System: Resend
 
 
 > **Hermes Agent — Implementation Notes**

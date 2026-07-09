@@ -1,4 +1,4 @@
-# claymation
+﻿# claymation
 
 3D clay figure aesthetic with stop-motion charm
 

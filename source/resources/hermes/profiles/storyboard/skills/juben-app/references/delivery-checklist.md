@@ -1,4 +1,4 @@
-# Pre-Delivery Checklist
+﻿# Pre-Delivery Checklist
 
 Run EVERY step before zipping and sending to user. Any failure = do NOT deliver.
 

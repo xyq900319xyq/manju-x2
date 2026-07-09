@@ -1,4 +1,4 @@
-# funnel
+﻿# funnel
 
 Narrowing stages showing conversion, filtering, or refinement process.
 

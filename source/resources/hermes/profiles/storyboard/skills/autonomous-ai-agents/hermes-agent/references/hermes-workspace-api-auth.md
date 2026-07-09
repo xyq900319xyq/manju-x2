@@ -1,4 +1,4 @@
-# Hermes Workspace API Authentication
+﻿# Hermes Workspace API Authentication
 
 ## Problem
 

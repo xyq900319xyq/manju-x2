@@ -1,4 +1,4 @@
-# Partial Workflows
+﻿# Partial Workflows
 
 Options to run specific parts of the workflow. Trigger these via natural language (e.g., "just the storyboard", "regenerate page 3").
 

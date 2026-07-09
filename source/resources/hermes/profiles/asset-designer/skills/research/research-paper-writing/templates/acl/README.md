@@ -1,4 +1,4 @@
-# *ACL Paper Styles
+﻿# *ACL Paper Styles
 
 This directory contains the latest LaTeX templates for *ACL conferences.
 

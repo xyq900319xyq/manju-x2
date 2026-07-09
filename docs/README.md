@@ -1,6 +1,6 @@
-# 漫剧助手X-2 用户版
+﻿# 漫剧助手X-2 用户版
 
-> **注**: 本 README 里的 `<your-org>` 是发版占位符,user 发版前需替换成实际 GitHub org/user 名(详见 `GITHUB_RELEASE.md`)。
+> **注**: 本 README 里的 `xyq900319xyq` 是发版占位符,user 发版前需替换成实际 GitHub org/user 名(详见 `GITHUB_RELEASE.md`)。
 
 ## 快速上手
 

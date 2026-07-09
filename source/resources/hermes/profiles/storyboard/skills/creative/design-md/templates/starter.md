@@ -1,4 +1,4 @@
----
+﻿---
 version: alpha
 name: MyBrand
 description: One-sentence description of the visual identity.

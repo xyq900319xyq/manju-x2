@@ -1,4 +1,4 @@
-# Benchmark Guide
+﻿# Benchmark Guide
 
 Complete guide to all 60+ evaluation tasks in lm-evaluation-harness, what they measure, and how to interpret results.
 

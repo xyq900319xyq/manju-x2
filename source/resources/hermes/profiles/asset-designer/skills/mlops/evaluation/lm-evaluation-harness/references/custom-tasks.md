@@ -1,4 +1,4 @@
-# Custom Tasks
+﻿# Custom Tasks
 
 Complete guide to creating domain-specific evaluation tasks in lm-evaluation-harness.
 

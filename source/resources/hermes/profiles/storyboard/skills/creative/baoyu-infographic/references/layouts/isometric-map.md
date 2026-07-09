@@ -1,4 +1,4 @@
-# isometric-map
+﻿# isometric-map
 
 3D-style spatial layout showing locations, relationships, or journey through space.
 

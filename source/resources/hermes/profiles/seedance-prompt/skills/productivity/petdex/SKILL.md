@@ -1,4 +1,4 @@
----
+﻿---
 name: petdex
 description: Install and select animated petdex mascots for Hermes.
 version: 1.0.0

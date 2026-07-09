@@ -1,4 +1,4 @@
-# Visual Design Principles
+﻿# Visual Design Principles
 
 ## 12 Core Principles
 

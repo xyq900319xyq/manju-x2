@@ -1,4 +1,4 @@
-# Prompt Compilation Formula — Moyin Creator
+﻿# Prompt Compilation Formula — Moyin Creator
 
 Derived from source code at `src/packages/ai-core/services/prompt-compiler.ts` and the compiled `index-BiEM7W1o.js` (function `buildCharacterSheetPrompt$1` at line ~139589).
 

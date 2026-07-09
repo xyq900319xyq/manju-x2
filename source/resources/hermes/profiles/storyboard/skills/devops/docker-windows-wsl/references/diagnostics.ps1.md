@@ -1,4 +1,4 @@
-# Docker Desktop Disk Diagnostics (PowerShell)
+﻿# Docker Desktop Disk Diagnostics (PowerShell)
 
 Run these from WSL via `powershell.exe -ExecutionPolicy Bypass -File <path>`.
 

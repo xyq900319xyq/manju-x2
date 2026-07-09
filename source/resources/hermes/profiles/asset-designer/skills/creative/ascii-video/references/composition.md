@@ -1,4 +1,4 @@
-# Composition & Brightness Reference
+﻿# Composition & Brightness Reference
 
 The composable system is the core of visual complexity. It operates at three levels: pixel-level blend modes, multi-grid composition, and adaptive brightness management. This document covers all three, plus the masking/stencil system for spatial control.
 

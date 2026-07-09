@@ -1,4 +1,4 @@
-# AAAI 2026 统一LaTeX模板使用说明 / AAAI 2026 Unified LaTeX Template Guide
+﻿# AAAI 2026 统一LaTeX模板使用说明 / AAAI 2026 Unified LaTeX Template Guide
 
 > **📝 重要说明 / Important Notice**: 本仓库借助Cursor在AAAI 2026官方模板基础上改进得到。如果遇到不满足或有冲突的情况，请积极提issues。
 > 

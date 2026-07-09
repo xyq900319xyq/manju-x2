@@ -1,4 +1,4 @@
-# comfy-cli Command Reference
+﻿# comfy-cli Command Reference
 
 Official CLI from [Comfy-Org/comfy-cli](https://github.com/Comfy-Org/comfy-cli).
 Docs: https://docs.comfy.org/comfy-cli/getting-started

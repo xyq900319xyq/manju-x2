@@ -1,4 +1,4 @@
-# Design System: Ollama
+﻿# Design System: Ollama
 
 
 > **Hermes Agent — Implementation Notes**

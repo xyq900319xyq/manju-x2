@@ -1,4 +1,4 @@
-# technical-schematic
+﻿# technical-schematic
 
 Technical diagrams with engineering precision and clean geometry.
 

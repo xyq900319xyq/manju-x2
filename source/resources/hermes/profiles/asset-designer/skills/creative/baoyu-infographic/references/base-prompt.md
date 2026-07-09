@@ -1,4 +1,4 @@
-Create a professional infographic following these specifications:
+﻿Create a professional infographic following these specifications:
 
 ## Image Specifications
 

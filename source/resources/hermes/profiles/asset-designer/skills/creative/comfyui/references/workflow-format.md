@@ -1,4 +1,4 @@
-# ComfyUI Workflow JSON Format
+﻿# ComfyUI Workflow JSON Format
 
 ## Two Formats — Only API Format Is Executable
 

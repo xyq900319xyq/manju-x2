@@ -1,4 +1,4 @@
----
+﻿---
 name: google-workspace
 description: "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python."
 version: 1.1.0

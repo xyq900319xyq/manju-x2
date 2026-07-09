@@ -1,4 +1,4 @@
-# Panel & UI Reference
+﻿# Panel & UI Reference
 
 Interactive control surfaces inside TouchDesigner — buttons, sliders, fields, custom parameter pages, panel callbacks. For HUD overlays (rendered text on visuals) see `layout-compositor.md`.
 

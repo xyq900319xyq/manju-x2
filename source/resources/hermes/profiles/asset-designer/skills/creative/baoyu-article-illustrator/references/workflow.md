@@ -1,4 +1,4 @@
-# Detailed Workflow Procedures
+﻿# Detailed Workflow Procedures
 
 ## Step 1: Detect Reference Images
 

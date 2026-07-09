@@ -1,4 +1,4 @@
----
+﻿---
 name: research-paper-writing
 title: Research Paper Writing Pipeline
 description: "Write ML papers for NeurIPS/ICML/ICLR: design→submit."

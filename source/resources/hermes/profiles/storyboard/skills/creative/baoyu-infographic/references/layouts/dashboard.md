@@ -1,4 +1,4 @@
-# dashboard
+﻿# dashboard
 
 Multi-metric display with charts, numbers, and KPI indicators.
 

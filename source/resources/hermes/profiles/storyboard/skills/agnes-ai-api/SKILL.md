@@ -1,4 +1,4 @@
----
+﻿---
 name: agnes-ai-api
 description: "Configure Hermes to use Agnes AI API as a model provider — endpoint, auth, troubleshooting."
 version: 1.0.0

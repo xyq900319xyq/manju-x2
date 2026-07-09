@@ -1,4 +1,4 @@
-# binary-comparison
+﻿# binary-comparison
 
 Side-by-side comparison of two items, states, or concepts.
 

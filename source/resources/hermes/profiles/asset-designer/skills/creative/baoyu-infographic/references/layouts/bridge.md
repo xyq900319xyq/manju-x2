@@ -1,4 +1,4 @@
-# bridge
+﻿# bridge
 
 Gap-crossing structure connecting problem to solution or current to future state.
 

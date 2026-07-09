@@ -1,4 +1,4 @@
-# LaTeX Templates for ML/AI Conferences
+﻿# LaTeX Templates for ML/AI Conferences
 
 This directory contains official LaTeX templates for major machine learning and AI conferences.
 

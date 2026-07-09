@@ -1,4 +1,4 @@
-# ComfyUI REST + WebSocket API Reference
+﻿# ComfyUI REST + WebSocket API Reference
 
 ComfyUI exposes a REST + WebSocket interface for workflow execution and
 management. **The same surface is used locally and on Comfy Cloud, with

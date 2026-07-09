@@ -1,4 +1,4 @@
-# waoowaoo Docker Deployment (2026-05-21 Session)
+﻿# waoowaoo Docker Deployment (2026-05-21 Session)
 
 Full deployment reference for waoowaoo (AI short-drama/comic tool) on Windows via Docker Desktop.
 

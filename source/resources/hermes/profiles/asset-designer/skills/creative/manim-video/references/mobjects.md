@@ -1,4 +1,4 @@
-# Mobjects Reference
+﻿# Mobjects Reference
 
 Everything visible on screen is a Mobject. They have position, color, opacity, and can be animated.
 

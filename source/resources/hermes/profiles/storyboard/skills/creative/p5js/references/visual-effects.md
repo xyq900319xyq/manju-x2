@@ -1,4 +1,4 @@
-# Visual Effects
+﻿# Visual Effects
 
 ## Noise
 

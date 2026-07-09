@@ -1,4 +1,4 @@
-# Source Bibliography
+﻿# Source Bibliography
 
 This document lists all authoritative sources used to build this skill, organized by topic.
 

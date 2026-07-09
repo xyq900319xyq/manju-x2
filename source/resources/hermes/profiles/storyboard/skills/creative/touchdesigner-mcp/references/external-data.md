@@ -1,4 +1,4 @@
-# External Data Reference
+﻿# External Data Reference
 
 Network and device I/O — HTTP requests, WebSockets, MQTT, Serial, TCP, UDP. For MIDI/OSC specifically see `midi-osc.md`.
 

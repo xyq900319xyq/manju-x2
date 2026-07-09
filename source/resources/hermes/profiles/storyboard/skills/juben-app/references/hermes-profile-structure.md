@@ -1,4 +1,4 @@
-# Hermes Profile Structure Bug
+﻿# Hermes Profile Structure Bug
 
 ## The Bug
 

@@ -1,4 +1,4 @@
-# Auto Selection
+﻿# Auto Selection
 
 Content signals determine default art + tone + layout (or preset).
 

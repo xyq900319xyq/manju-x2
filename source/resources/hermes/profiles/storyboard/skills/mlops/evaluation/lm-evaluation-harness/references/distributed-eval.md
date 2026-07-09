@@ -1,4 +1,4 @@
-# Distributed Evaluation
+﻿# Distributed Evaluation
 
 Guide to running evaluation across multiple GPUs using data parallelism and tensor/pipeline parallelism.
 

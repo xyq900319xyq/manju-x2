@@ -1,4 +1,4 @@
-# blueprint
+﻿# blueprint
 
 Precise technical blueprint style with engineering precision
 
