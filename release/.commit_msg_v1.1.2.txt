@@ -1,0 +1,20 @@
+v1.1.2 — 分镜/提示词生成完 UI 不刷新修复
+
+## 修复
+- 分镜/提示词生成完 UI 不刷新:日志显示"完成: 分镜生成 #1" 但分镜面板一直"暂无分镜"、状态一直 pending,重启后才看得到
+
+## 根因
+main_window.py 剧集详情 tab 用了 id-only cache(self._episode_detail_cache[0] == ep.id),
+persist 函数调 _show_episode_detail(ep_updated, ...) 时走 early return 复用旧 widget 串,
+db 实际写好但 UI 没刷。
+
+## 改动
+- ui/main_window.py _persist_task_result:StoryboardTask / VideoPromptTask 分支在调 _show_episode_detail 之前 invalidate _episode_detail_cache
+- 版本号 1.1.1 → 1.1.2 (main.py 2 处 + main_window.py 1 处 + .iss 1 处)
+- docs/更新日志.md 加 v1.1.2 条目
+- RELEASE_NOTES_v1.1.2.md
+
+## 验证
+- 剧集 ID 没变,_episode_detail_cache 直接 None 掉
+- 下次进 _show_episode_detail 是 cache miss,真的重建 UI,新 storyboard/status 显示出来
+- _show_prompt_tab / _show_video_tab 的 cache key 含 hash(ep.prompt or "") / hash(ep.video_segments or ""),字段变化时本来就会 invalidate,无需改

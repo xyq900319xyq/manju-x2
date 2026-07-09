@@ -517,7 +517,7 @@ class MainWindow(QMainWindow):
         log.info("用户主动检查更新")
         # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.1.1"
+        info.current_version = "1.1.2"
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
         # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)
@@ -3491,6 +3491,13 @@ class MainWindow(QMainWindow):
             # v0.7.8.12：分镜完成后立即同步落盘到 outputs/<项目>/epNN_xxx_storyboard.md
             self._dump_storyboard_to_disk(ep_fresh, task.result_content)
             if self._current_episode and self._current_episode.id == ep_id:
+                # v1.1.2【UI 刷新 bug 修复】:分镜刚生成完,ep 里的 storyboard /
+                # status 字段都变了,必须 invalidate 缓存(否则 _show_episode_detail
+                # 会因 v0.7.8.49 缓存命中走 early return,UI 永远显示旧的
+                # "(暂无分镜)"和"状态: pending",即使 db 已经写好)。
+                if (self._episode_detail_cache
+                        and self._episode_detail_cache[0] == ep_id):
+                    self._episode_detail_cache = None
                 ep_updated = self.db.get_episode(ep_id)
                 if ep_updated and self._current_project:
                     self._current_episode = ep_updated
@@ -3513,6 +3520,11 @@ class MainWindow(QMainWindow):
             # (video_segments 已非空时返回 0,不覆盖)
             n_segs = self._auto_push_prompt_to_segments(ep_fresh, task.result_content)
             if self._current_episode and self._current_episode.id == ep_id:
+                # v1.1.2【UI 刷新 bug 修复】:同 StoryboardTask,prompt/video
+                # 字段变了也要 invalidate 缓存
+                if (self._episode_detail_cache
+                        and self._episode_detail_cache[0] == ep_id):
+                    self._episode_detail_cache = None
                 ep_updated = self.db.get_episode(ep_id)
                 if ep_updated and self._current_project:
                     self._current_episode = ep_updated
