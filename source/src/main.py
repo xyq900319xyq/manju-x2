@@ -243,6 +243,17 @@ def main() -> int:
     # v0.7.3:必须在 QApplication 之前补 home env(影响 hermes 子进程找 profile)
     _ensure_home_env()
 
+    # v1.1.3【防 UnicodeEncodeError】:PyInstaller EXE 启动时 stdout/stderr 默认是
+    # cp936/cp437(系统 codepage),后续 log.info / QMessageBox 内部把含中文的字符串
+    # encode 出去会抛 "UnicodeEncodeError: 'ascii' codec can't encode characters"。
+    # 强制 reconfigure 到 utf-8(保证 '下载失败' / '漫剧助手' 等中文不爆)。
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            if _s is not None and hasattr(_s, "reconfigure"):
+                _s.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
@@ -250,7 +261,7 @@ def main() -> int:
     app.setApplicationName("漫剧助手X-2")
     app.setApplicationDisplayName("漫剧助手X-2")
     app.setOrganizationName("ManjuTools")
-    app.setApplicationVersion("1.1.2")
+    app.setApplicationVersion("1.1.3")
 
     _setup_logging()
 
@@ -285,7 +296,7 @@ def main() -> int:
         from core.updater import UpdateChecker
         window._updater = UpdateChecker(
             project_root=ROOT,
-            current_version="1.1.2",
+            current_version="1.1.3",
             parent=window,
         )
         # 监听信号：红点 / 状态栏提示

@@ -414,7 +414,17 @@ class _DownloadWorker(QObject):
 
     def __init__(self, url: str, dest_path: str) -> None:
         super().__init__()
-        self._url = url
+        # v1.1.3【防 UnicodeEncodeError】:url 可能含中文(比如
+        # update.json 的 url 字段是 ".../漫剧助手X-2_v1.1.2_Setup.exe"),
+        # 直接传给 urllib.request.Request → http.client.putrequest 内部
+        # `request.encode('iso-8859-1')` 会爆 "UnicodeEncodeError: 'ascii'
+        # codec can't encode characters in position X-Y"。
+        # 防御:__init__ 阶段先 percent-encode 中文,urlopen 拿到的就是纯 ASCII。
+        # safe 保留 scheme/path/query/fragment 关键符号,避免改语义。
+        try:
+            self._url = urllib.parse.quote(url, safe=":/?&=#%!$&'()*+,;=:@")
+        except Exception:
+            self._url = url
         self._dest = dest_path
         self._cancel = False
 

@@ -467,9 +467,15 @@ class MainWindow(QMainWindow):
         def _on_error(msg: str) -> None:
             dlg.close()
             log.warning("下载失败: %s", msg)
+            # v1.1.3【防 UnicodeEncodeError】:info.html_url 在 v1.1.2
+            # 之前的 update.json 是 ".../docs/更新日志.md"(中文路径)。
+            # QMessageBox.critical 在 Windows native MessageBox 转换时
+            # 触发 ascii encode,position 51-54 爆 "UnicodeEncodeError"。
+            # 防御:html_url 段强制 ascii safe(中文 → '?')。
+            safe_url = info.html_url.encode("ascii", "replace").decode("ascii")
             QMessageBox.critical(
                 self, "下载失败",
-                f"下载安装包失败：\n{msg}\n\n可前往 {info.html_url} 手动下载。",
+                f"下载安装包失败：\n{msg}\n\n可前往 {safe_url} 手动下载。",
             )
 
         self._downloader.progress.connect(_on_progress)
@@ -517,7 +523,7 @@ class MainWindow(QMainWindow):
         log.info("用户主动检查更新")
         # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.1.2"
+        info.current_version = "1.1.3"
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
         # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)
