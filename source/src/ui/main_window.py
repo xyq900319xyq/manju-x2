@@ -517,7 +517,7 @@ class MainWindow(QMainWindow):
         log.info("用户主动检查更新")
         # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.1.0"
+        info.current_version = "1.1.1"
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
         # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)

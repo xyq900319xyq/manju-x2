@@ -35,6 +35,13 @@ log = logging.getLogger("manju.updater")
 # GitHub repo 占位符（Phase 7 发版前用环境变量覆盖）
 DEFAULT_GITHUB_REPO = os.environ.get("MANJU_X2_GITHUB_REPO", "xyq900319xyq/manju-x2")
 GITHUB_API_LATEST = "https://api.github.com/repos/{repo}/releases/latest"
+# v1.1.1【静态回退源】：raw.githubusercontent.com 不限速,build 后把
+# release/update.json 推到 main 分支即可。优先用这个,GitHub API 仅作兜底
+# (60 次/小时/IP 限速,大量用户同时用会撞墙)
+UPDATE_JSON_URL = os.environ.get(
+    "MANJU_X2_UPDATE_JSON_URL",
+    "https://raw.githubusercontent.com/xyq900319xyq/manju-x2/main/release/update.json",
+)
 CACHE_FILENAME = ".update_check_cache.json"
 CACHE_TTL_SECONDS = 24 * 3600  # 24h
 HTTP_TIMEOUT = 10  # 秒
@@ -156,15 +163,81 @@ def has_newer_version(current: str, latest: str) -> bool:
 
 # ---------- 拉取（同步，QThread 调） ----------
 
+def fetch_update_json(url: str = UPDATE_JSON_URL, timeout: int = HTTP_TIMEOUT) -> UpdateInfo:
+    """v1.1.1：拉 release/update.json(静态文件,raw.githubusercontent.com 不限速)。
+
+    update.json 结构(由 build_x2.py 写):
+        {
+          "version": "1.1.0",
+          "url": "https://github.com/.../Setup.exe",
+          "md5": "...",
+          "sha256": "...",
+          "size": 91186388,
+          "changelog_url": "https://github.com/.../更新日志.md",
+          "release_date": "2026-07-09"
+        }
+
+    Returns:
+        UpdateInfo: 成功时 latest_version/asset_url/asset_size/html_url 填好
+        失败时 error_msg 填好
+    """
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "manju-x2-updater/1.0"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            if resp.status != 200:
+                return UpdateInfo(
+                    error_msg=f"update.json HTTP {resp.status}",
+                    checked_at=time.time(),
+                )
+            raw = resp.read().decode("utf-8", errors="replace")
+            data = json.loads(raw)
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, json.JSONDecodeError) as e:
+        return UpdateInfo(error_msg=f"{type(e).__name__}: {e}", checked_at=time.time())
+    except Exception as e:  # noqa: BLE001
+        return UpdateInfo(error_msg=f"{type(e).__name__}: {e}", checked_at=time.time())
+
+    ver = str(data.get("version", "") or "").strip()
+    asset_url = str(data.get("url", "") or "").strip()
+    asset_size = int(data.get("size", 0) or 0)
+    html_url = str(data.get("changelog_url", "") or "").strip()
+    if not ver:
+        return UpdateInfo(error_msg="update.json 无 version 字段", checked_at=time.time())
+    return UpdateInfo(
+        has_update=False,  # 由调用方比 current 后再设
+        latest_version=ver,
+        html_url=html_url,
+        asset_url=asset_url,
+        asset_size=asset_size,
+        current_version="",  # 由调用方注入
+        error_msg="",
+        checked_at=time.time(),
+    )
+
+
 def fetch_latest_release(repo: str = DEFAULT_GITHUB_REPO, timeout: int = HTTP_TIMEOUT) -> UpdateInfo:
-    """同步拉 GitHub releases/latest。
+    """同步拉最新 release 信息。
+
+    v1.1.1【优先级】:
+    1. 先试 release/update.json(raw.githubusercontent.com,不限速)
+    2. 失败再走 GitHub API(api.github.com,60/h/IP 限速)
+    3. 两个都失败 → error_msg 填好返回
 
     Returns:
         UpdateInfo：成功时 has_update/latest_version/html_url 填好；
         失败时 error_msg 填好, has_update=False。
         任何异常都包成 info 返回，**不**抛（让 QThread 拿到结果发信号给 UI）。
     """
-    current = ""  # 由调用方（worker）注入
+    # 1) 优先 update.json(无 rate limit)
+    info = fetch_update_json(timeout=timeout)
+    if not info.error_msg and info.latest_version:
+        log.info("updater: update.json 命中 %s", info.latest_version)
+        return info
+    if info.error_msg:
+        log.info("updater: update.json 失败(%s),降级到 GitHub API", info.error_msg)
+    # 2) 兜底 GitHub API
     url = GITHUB_API_LATEST.format(repo=repo)
     try:
         req = urllib.request.Request(
@@ -192,12 +265,28 @@ def fetch_latest_release(repo: str = DEFAULT_GITHUB_REPO, timeout: int = HTTP_TI
     notes = str(data.get("body", "") or "")
     if not tag:
         return UpdateInfo(error_msg="API 响应无 tag_name", checked_at=time.time())
+    # 解析 assets 找 Setup.exe
+    asset_url = ""
+    asset_size = 0
+    for a in (data.get("assets") or []):
+        name = str(a.get("name", "") or "")
+        if not name:
+            continue
+        if name.startswith("Source code"):
+            continue
+        if not name.lower().endswith(".exe"):
+            continue
+        asset_url = str(a.get("browser_download_url", "") or "").strip()
+        asset_size = int(a.get("size", 0) or 0)
+        break
     return UpdateInfo(
         has_update=False,  # 由调用方比 current 后再设
         latest_version=tag,
         html_url=html_url,
         release_notes=notes[:2000],  # 截断防内存炸
-        current_version=current,
+        asset_url=asset_url,
+        asset_size=asset_size,
+        current_version="",
         error_msg="",
         checked_at=time.time(),
     )

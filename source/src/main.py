@@ -250,7 +250,7 @@ def main() -> int:
     app.setApplicationName("漫剧助手X-2")
     app.setApplicationDisplayName("漫剧助手X-2")
     app.setOrganizationName("ManjuTools")
-    app.setApplicationVersion("1.1.0")
+    app.setApplicationVersion("1.1.1")
 
     _setup_logging()
 
@@ -285,7 +285,7 @@ def main() -> int:
         from core.updater import UpdateChecker
         window._updater = UpdateChecker(
             project_root=ROOT,
-            current_version="1.1.0",
+            current_version="1.1.1",
             parent=window,
         )
         # 监听信号：红点 / 状态栏提示

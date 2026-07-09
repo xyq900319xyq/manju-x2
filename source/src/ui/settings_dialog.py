@@ -1334,23 +1334,11 @@ class SettingsDialog(QDialog):
         # 2. 校验：active config 必填字段非空（**不**遍历所有 config —
         #    跟视频 API 行为一致：非 active 允许空,用户可同时维护
         #    多个未完成的 config;真要调用时再报错）。
+        # v1.1.1【无字段硬约束】：保存时**不**检查 active config 字段是否
+        # 填齐。理由:用户可能暂时不需要某个 API section(比如刚装软件还没
+        # 配视频 API,只想配 LLM),这时不能因为视频 API 缺 api_key 就
+        # 拒绝保存 LLM 设置。校验下放到实际调用 API 时(真要生成视频才报错)。
         active_id = self._data.get("active", "")
-        for i, c in enumerate(self._data["configs"]):
-            if c.get("id") != active_id:
-                continue
-            missing = [
-                k for k in ("id", "name", "model", "base_url", "api_key")
-                if not str(c.get(k, "")).strip()
-            ]
-            if missing:
-                QMessageBox.warning(
-                    self,
-                    "校验失败",
-                    f"active config（第 {i + 1} 项 {c.get('name', c.get('id', '?'))}）"
-                    f"缺少字段: {', '.join(missing)}\n\n"
-                    f"无兜底硬约束：请主动填写后保存。",
-                )
-                return
         if not active_id:
             QMessageBox.warning(self, "校验失败", "未选择 active 配置")
             return
@@ -1361,27 +1349,9 @@ class SettingsDialog(QDialog):
                 f"active='{self._data['active']}' 在 configs 里找不到对应项",
             )
             return
-        # v0.7.8.38.1【无兜底硬约束】：视频 API 校验——active config 必须
-        # 填齐 model / base_url / api_key 才能保存（**不**用兜底）。
-        # 非 active 的允许空（用户可能同时维护多个未完成的 config）。
-        if hasattr(self, "video_api_list_widget"):
-            active_vid = self._video_api_data.get("active", "")
-            for i, c in enumerate(self._video_api_data["configs"]):
-                if c.get("id") != active_vid:
-                    continue
-                missing = [
-                    k for k in ("model", "base_url", "api_key")
-                    if not str(c.get(k, "")).strip()
-                ]
-                if missing:
-                    QMessageBox.warning(
-                        self,
-                        "校验失败",
-                        f"【视频 API】active config（第 {i + 1} 项）缺少字段: "
-                        f"{', '.join(missing)}\n\n"
-                        f"无兜底硬约束：请主动填写后保存。",
-                    )
-                    return
+        # v1.1.1【下放硬约束】：视频 API active config 不再保存时校验。
+        # 缺字段时直接保存,等到用户真正点"生成视频"时再弹错。
+        # 生图 API 同样下放(本来就不校验)。
         # 3. 写盘：保留未编辑的字段
         new_raw = dict(self._raw)
         new_raw["configs"] = self._data["configs"]
