@@ -162,6 +162,7 @@ def main():
             print(f'    sha256 = {sha256}')
 
     step('7) 写 update.json(给自更新检查用)')
+    import datetime
     import json
     import re
     setup_files = sorted(RELEASE.glob('漫剧助手X-2_v*_Setup.exe'))
@@ -179,7 +180,7 @@ def main():
             'sha256': sha256,
             'size': latest.stat().st_size,
             'changelog_url': 'https://github.com/xyq900319xyq/manju-x2/blob/main/docs/更新日志.md',
-            'release_date': '2026-07-08',
+            'release_date': datetime.date.today().isoformat(),
         }
         (RELEASE / 'update.json').write_text(json.dumps(update, ensure_ascii=False, indent=2), encoding='utf-8')
         print(f'  ✓ update.json: {ver} md5={md5} sha256={sha256[:16]}...')

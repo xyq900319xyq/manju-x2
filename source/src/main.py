@@ -4,6 +4,10 @@ import os
 import sys
 from pathlib import Path
 
+# File-level logger，所有函数体内用 `log.xxx` 都靠它。
+# 命名 "manju" 与 _setup_logging() / _ensure_home_env() 里 logging.getLogger("manju") 一致。
+log = logging.getLogger("manju")
+
 
 def _ensure_home_env() -> None:
     """v0.7.4：补 USERPROFILE / HOME / HERMES_HOME 到 os.environ。
@@ -281,7 +285,7 @@ def main() -> int:
         from core.updater import UpdateChecker
         window._updater = UpdateChecker(
             project_root=ROOT,
-            current_version="1.0.0",
+            current_version="1.0.1",
             parent=window,
         )
         # 监听信号：红点 / 状态栏提示
