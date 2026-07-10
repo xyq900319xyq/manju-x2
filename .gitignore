@@ -45,8 +45,12 @@ logs/
 # Phase 2 的 hermes_dist/ 是 PyInstaller 产物,不入 repo
 source/hermes_dist/
 # hermes skills/profiles 由 build_x2.py 拷贝,不入 repo
+# 运行时 sessions 跳过
 source/resources/hermes/profiles/*/sessions/
+# profile memory 目录(memory.lock / USER.md 等运行时数据不入)
+# 但 MEMORY.md 是 user 维护的 profile 核心规则,需要入 git(seedance-prompt v3.2.0 等)
 source/resources/hermes/profiles/*/memories/
+!source/resources/hermes/profiles/*/memories/MEMORY.md
 source/resources/hermes/profiles/*/bin/
 source/resources/hermes/profiles/*/cache/
 source/resources/hermes/profiles/*/state.db*
