@@ -479,11 +479,14 @@ class MainWindow(QMainWindow):
             self._launch_setup_silent(path, info.latest_version)
 
         def _on_error(msg: str) -> None:
-            # v1.1.5.11 同 _on_finished:用 deleteLater 不用 close
+            # v1.1.5.12 同 _on_finished:setParent(None) + hide() + deleteLater()
+            # 三管齐下,确保 dlg 不挡 QMessageBox.critical
             try:
                 dlg.canceled.disconnect(self._downloader.cancel)
             except (RuntimeError, TypeError):
                 pass
+            dlg.setParent(None)
+            dlg.hide()
             dlg.deleteLater()
             log.warning("下载失败: %s", msg)
             # v1.1.3【防 UnicodeEncodeError】:info.html_url 在 v1.1.2
