@@ -14,9 +14,11 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
+import sys as _sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 from .asset_parser import (
     format_asset_list_text,
@@ -38,6 +40,86 @@ from .prompts import (
     convert_to_standard_format,
 )
 from .task_queue import Task
+
+
+# v1.1.5.5【hermes bash 路径主动探测】:manju 端在 spawn hermes 前**自己探测** bash.exe
+# 路径并塞到 env["HERMES_GIT_BASH_PATH"],不依赖 Windows User-scope env var 加载。
+# 根因:Inno Setup [Registry] 写 HKCU\Environment 后,Windows **不会**自动把新值注入
+# **已运行**的进程(只对新登录/新 explorer 启动的进程生效)。manju 进程是覆盖装后
+# 启动的,继承的是装之前的 env block → 装完第一次启动 manju,**新** env var 还没生效
+# → hermes `_find_bash` 第 1 步读 os.environ.get("HERMES_GIT_BASH_PATH") 拿不到。
+# 修法:manju 主动探测 8 个候选路径,找到第一个存在 bash.exe 的,直接 env dict 注入。
+def _find_bash_exe() -> Optional[str]:
+    """v1.1.5.5 探测 bash.exe 路径,优先级从高到低:
+
+    1. os.environ["HERMES_GIT_BASH_PATH"] - 用户已设(命令行启动)
+    2. <manju_root>/PortableGit/bin/bash.exe - v1.1.5.5 installer 装的
+    3. %LOCALAPPDATA%/hermes/git/bin/bash.exe - hermes installer 装的 (PortableGit)
+    4. %LOCALAPPDATA%/hermes/git/usr/bin/bash.exe - hermes installer 装的 (MinGit 32-bit)
+    5. shutil.which("bash") - 系统 PATH
+    6. %ProgramFiles%/Git/bin/bash.exe - system Git 64-bit
+    7. %ProgramFiles(x86)%/Git/bin/bash.exe - system Git 32-bit
+    8. %LOCALAPPDATA%/Programs/Git/bin/bash.exe - system Git 用户装
+
+    返回第一个存在的 bash.exe 绝对路径,都找不到返回 None。
+    """
+    # 1) 用户在 os.environ 已设(命令行启动时)
+    custom = os.environ.get("HERMES_GIT_BASH_PATH", "").strip()
+    if custom and os.path.isfile(custom):
+        return custom
+
+    # 2) manju installer (v1.1.5.5 自带 PortableGit) 装的
+    root_dir = getattr(_sys, "_manju_root", None) or Path(_sys.executable).resolve().parent
+    candidates = [
+        str(root_dir / "PortableGit" / "bin" / "bash.exe"),
+        # 3-4) hermes installer 自己装的(PortableGit / MinGit 32-bit)
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "hermes", "git", "bin", "bash.exe"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "hermes", "git", "usr", "bin", "bash.exe"),
+        # 5) 系统 PATH 里的 bash
+    ]
+    # 5) shutil.which 单独处理(可能返回 None)
+    which_bash = shutil.which("bash")
+    if which_bash:
+        candidates.append(which_bash)
+    # 6-8) 系统 Git
+    candidates.extend([
+        os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "Git", "bin", "bash.exe"),
+        os.path.join(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"), "Git", "bin", "bash.exe"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "Git", "bin", "bash.exe"),
+    ])
+    for c in candidates:
+        if c and os.path.isfile(c):
+            return c
+    return None
+
+
+def _ensure_hermes_bash_env(env: dict) -> dict:
+    """v1.1.5.5 在 hermes env dict 里塞 HERMES_GIT_BASH_PATH + 把 bin/ 加到 PATH。
+
+    - env["HERMES_GIT_BASH_PATH"]:hermes _find_bash() 第 1 步读这个(优先级最高)
+    - env["PATH"]:hermes 子进程也用 PATH 找 cat/awk/sed/grep/curl 等工具
+
+    不修改原 env dict,返回新 dict(dev 模式安全)。
+    """
+    new_env = dict(env)
+    bash_exe = _find_bash_exe()
+    if bash_exe:
+        new_env["HERMES_GIT_BASH_PATH"] = bash_exe
+        # 把 bash 所在 bin/ 目录加到 PATH 头(hermes 内部可能调 cat/awk 等)
+        bash_dir = os.path.dirname(bash_exe)
+        cur_path = new_env.get("PATH", "")
+        path_parts = [p for p in cur_path.split(os.pathsep) if p]
+        if bash_dir and bash_dir not in path_parts:
+            new_env["PATH"] = bash_dir + (os.pathsep + cur_path if cur_path else "")
+        _log = logging.getLogger("manju.generators")
+        _log.info("hermes bash 路径主动注入: %s", bash_exe)
+    else:
+        _log = logging.getLogger("manju.generators")
+        _log.warning(
+            "未找到 bash.exe,hermes terminal 工具可能不可用。"
+            "可手动下 Git for Windows 或在 settings 设 HERMES_GIT_BASH_PATH。"
+        )
+    return new_env
 
 
 # ---------- 请求数据类 ----------
@@ -353,6 +435,10 @@ def _build_hermes_call(
         "HERMES_HOME": str(config.hermes_home),
         "PYTHONPATH": str(_hijack_dir),
     }
+    # v1.1.5.5【hermes bash 路径主动注入】:Inno Setup [Registry] 写 HKCU\Environment
+    # 后,Windows **不**会自动把新 env var 注入已运行进程,manju 主动探测 8 个候选
+    # 路径并塞到 env dict,不依赖系统 env var 加载时机。详见 _find_bash_exe() 注释。
+    env = _ensure_hermes_bash_env(env)
     # v0.7.8.15【诊断模式】:设 MANJU_PROXY=http://127.0.0.1:8888 时强制 hermes 走本地
     # logging proxy (diag_proxy.py),截获实际请求看 Cloudflare 403 怎么发生。
     # 关键:Python urllib 内部走 `urllib.request.getproxies()` 读**小写**
@@ -1314,6 +1400,9 @@ class AssetExtractTask(Task):
             # manju parser 能解析的格式。
             "HERMES_HOME": str(self._config.hermes_home),
         }
+        # v1.1.5.5【hermes bash 路径主动注入】:AssetExtractTask 不走 _build_hermes_call,
+        # 这里独立构造 env dict,同样调 _ensure_hermes_bash_env 注入 bash 路径。
+        env = _ensure_hermes_bash_env(env)
         args = base + ["-q", full_prompt, "--quiet"]
         tmp_file = Path(tmp_script_file) if tmp_script_file else None
 

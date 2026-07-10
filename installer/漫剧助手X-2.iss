@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.5"
+#define MyAppVersion "1.1.5.6"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -123,7 +123,7 @@ begin
   Result := False;  // 默认不需要重启 Inno
   if CheckForMutexes('{#MyAppName}_InstanceMutex') then
   begin
-    if MsgBox('漫剧助手X-2 正在运行。安装程序将关闭它后继续。是否继续？',
+    if MsgBox('漫剧助手X-2 正在运行。安装程序将关闭它后继续。是否继续?',
               mbConfirmation, MB_YESNO) = IDYES then
     begin
       // 杀掉旧 EXE
@@ -133,3 +133,17 @@ begin
     end;
   end;
 end;
+
+// v1.1.5.6【WM_SETTINGCHANGE 广播 - 不实现】:**manju 端核心 fix 是在 spawn hermes 前
+// 主动探测 bash 路径**(generators.py `_ensure_hermes_bash_env`,不依赖系统 env var 加载),
+// 所以这里**不**调 WM_SETTINGCHANGE 广播。Inno Setup 写 HKCU\Environment 是辅助
+// (让用户能在 System Properties 看到 env var + 下次新登录后生效)。
+//
+// 早期 v1.1.5.6 build 试过 [Code] 段直接 SendMessageTimeoutA,**踩坑**:
+//   - PChar('Environment') 报 "Unknown identifier 'PChar'"
+//   - Pointer(env_name) 报 "Unknown identifier 'Pointer'"
+//   - PAnsiChar(env_name) 报 "Unknown identifier 'PAnsiChar'"
+// Inno Setup 6 [Code] 段 Pascal 不支持 WM API 的字符串指针 cast。强行调需要
+// LoadDLL + GetProcAddress + 手动 GetMem + StrPCopy,代码量 30+ 行,容易引入其他 BUG。
+// 备选方案:不写 [Registry] 段,改用 [Code] 段 Exec('reg.exe', 'add ...') - reg.exe 自己会广播。
+// 当前的 [Registry] 段保留是因为它直接、明确、可读(用户能在 regedit 看到)。
