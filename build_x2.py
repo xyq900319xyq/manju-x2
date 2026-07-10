@@ -124,6 +124,28 @@ def main():
                 shutil.copy2(item, dst)
         print(f'  ✓ hermes 嵌入 {target} (随 Inno Setup Source dist\\漫剧助手X-2\\* → {{app}}\\hermes\\)')
 
+    # v1.1.5.1【关键修复】:把 manju 自带的 hermes profiles 拷到 <dist>/resources/hermes/profiles/
+    # 原因:Config.hermes_home 探测顺序第 2 优先选 <project_root>/resources/hermes/ (config.py:657-658)
+    # + ensure_local_hermes_profile 把 profiles 写到
+    # <project_root>/resources/hermes/profiles/<name>/ (config.py:1151)。
+    # 旧 build_x2.py step 3 只拷了 hermes.exe 到 dist/.../hermes/,**没**拷 profiles,
+    # 导致 EXE 安装后 <install_root>/resources/hermes/profiles/ 目录不存在,
+    # 探测 fallback 到 <hermes.exe>/../ 找 profiles/ 也没有 → hermes 子进程加载
+    # profile 时找不到 SOUL.md / config.yaml / skills/ → 输出"skill 未在系统中安装"。
+    # (user 反馈 v1.1.5 三个智能体文件夹都是空的,根因在此)
+    src_profiles = SOURCE / 'resources' / 'hermes' / 'profiles'
+    dst_profiles = DIST / 'resources' / 'hermes' / 'profiles'
+    if src_profiles.is_dir():
+        if dst_profiles.exists():
+            shutil.rmtree(dst_profiles, ignore_errors=True)
+        shutil.copytree(src_profiles, dst_profiles)
+        # 算一下拷了多少个 profile 文件
+        n_profiles = sum(1 for p in dst_profiles.iterdir() if p.is_dir())
+        print(f'  ✓ 拷 {src_profiles} → {dst_profiles} ({n_profiles} 个 profile: '
+              f'{", ".join(p.name for p in dst_profiles.iterdir() if p.is_dir())})')
+    else:
+        print(f'  ⚠ 找不到 {src_profiles},跳过 hermes profiles 嵌入')
+
     step('4) 准备 config\ / data\ / outputs\ / logs\ 空目录(首次安装)')
     for sub in ['config', 'data', 'outputs', 'logs']:
         d = DIST / sub

@@ -1,0 +1,18 @@
+v1.1.5.1 — 紧急修复:hermes 三个智能体打包丢失
+
+build_x2.py step 3 之前只把 hermes.exe 拷到 dist/.../hermes/,漏拷
+source/resources/hermes/profiles/ 到 dist/.../resources/hermes/profiles/。
+后果:EXE 模式 Config.hermes_home 探测不到 profiles,hermes 跑时报
+"skill 未在系统中安装"。
+
+修法:build_x2.py step 3 后加一步 copytree,完整拷 asset-designer /
+seedance-prompt / storyboard 三个 profile 到 dist/.../resources/hermes/profiles/。
+
+文件改动:
+- build_x2.py: +19 行 (step 3.5 profiles copytree)
+- source/src/main.py: 版本号 1.1.5 → 1.1.5.1 (2 处)
+- installer/漫剧助手X-2.iss: MyAppVersion 1.1.5 → 1.1.5.1
+- docs/更新日志.md: +v1.1.5.1 段
+- release/update.json: v1.1.5 → v1.1.5.1 (md5 + url + size)
+- release/X-2_v1.1.5.1_Setup.exe: 编译产物
+- release/X-2_v1.1.5.1_Setup.exe.{md5,sha256}: 校验和
