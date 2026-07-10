@@ -532,10 +532,15 @@ class UpdateDownloader(QObject):
         return True
 
     def cancel(self) -> None:
-        """用户取消:设 worker._cancel,worker 下次循环检查会退出 + 删文件。"""
+        """设 worker._cancel,worker 下次循环检查会退出 + 删文件。
+        v1.1.5.12【log 文字改明确,避免 user 误读】:之前 log.info("用户取消")
+        误导 user 以为自己点了取消,实际这个函数经常被 _on_finished 内的
+        dlg.deleteLater()/close() 触发(QProgressDialog 销毁时 emit canceled),
+        不是 user 主动。改 log 文字让 user 不再误读。
+        """
         if self._worker is not None:
             self._worker._cancel = True
-            log.info("updater.download: 用户取消")
+            log.info("updater.download: 内部 cancel signal(非用户主动,通常是 dlg 销毁触发)")
 
     def _on_finished(self, dest: str) -> None:
         log.info("updater.download: 下载完成 %s", dest)
