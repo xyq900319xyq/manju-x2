@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.9"
+#define MyAppVersion "1.1.5.10"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -115,7 +115,7 @@ Type: filesandordirs; Name: "{app}\cache"
 
 [Code]
 // v1.0.0 修:NeedRestart() 默认返回 False(无需重启 Inno),
-// 只在旧 EXE 还在跑且用户同意 kill 时才返回 True
+// 只在旧 EXE 还在跑时直接 taskkill 杀掉再装,不弹确认框
 function NeedRestart(): Boolean;
 var
   ResultCode: Integer;
@@ -123,14 +123,14 @@ begin
   Result := False;  // 默认不需要重启 Inno
   if CheckForMutexes('{#MyAppName}_InstanceMutex') then
   begin
-    if MsgBox('漫剧助手X-2 正在运行。安装程序将关闭它后继续。是否继续?',
-              mbConfirmation, MB_YESNO) = IDYES then
-    begin
-      // 杀掉旧 EXE
-      Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
-      Sleep(2000);
-      // 杀完不需要重启 Inno,只要继续装就行
-    end;
+    // v1.1.5.10【静默更新修复】:去掉 MsgBox(),直接 taskkill 杀旧 EXE。
+    // Inno Setup 6 [Code] 段 MsgBox() 不受 /VERYSILENT /SUPPRESSMSGBOXES 影响,
+    // 会强制弹"是否继续"确认框,经常藏在所有窗口后面被 user 忽略,
+    // 导致 installer 卡住等 user 点确认 → 装失败,EXE 没换。
+    // 改成静默 taskkill + sleep,配合 main_window.py 的 /FORCECLOSEAPPLICATIONS
+    // 双保险,确保 Setup.exe 干净替换。
+    Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
+    Sleep(2000);
   end;
 end;
 
