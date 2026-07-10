@@ -561,8 +561,10 @@ class MainWindow(QMainWindow):
                 self.status_migration.setText(
                     f"已从 {sp} 迁移 ({at})  {rows or ''}"
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            # v1.1.5【C10 修复】:数据迁移失败时留 log,user 反映"迁移没显示"
+            # 至少能从 logs/manju.log 看到为啥失败
+            log.debug("migrate status check failed: %s", e)
 
     # ---------- 选择事件 ----------
     @Slot(str)
@@ -2461,7 +2463,13 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "错误", f"创建失败: {e}")
             return
-        self.tree.add_project(p)
+        # v1.1.5【B1 修复】:add_project 返回 item,用 setCurrentItem 触发
+        # itemSelectionChanged → _on_project_selected,自动设 _current_project
+        # + 启用 toolbar "新建剧集" 按钮(之前 addTopLevelItem 不触发 selection,
+        # user 新建项目后 toolbar 按钮还是灰的,user 不知道为啥按不动)。
+        item = self.tree.add_project(p)
+        if item is not None:
+            self.tree.setCurrentItem(item)
         self.status_msg.setText(f"已创建项目: {name}")
 
     @Slot(str)
@@ -2485,7 +2493,15 @@ class MainWindow(QMainWindow):
             return
         project = self.db.get_project(project_id)
         proj_name = project.name if project else ""
-        self.tree.add_episode(ep, project_name=proj_name)
+        # v1.1.5【B2 修复】:add_episode 返回 child item,用 setCurrentItem 触发
+        # itemSelectionChanged → _on_episode_selected,自动设 _current_episode
+        # + 切到分镜 tab(之前 addChild 不触发 selection,user 新建剧集后还停在
+        # 旧剧集/项目概览,看不到新剧集内容)。
+        # 同时建完即让用户能看到剧本,先 invalidate cache。
+        self._invalidate_all_ui_caches()
+        item = self.tree.add_episode(ep, project_name=proj_name)
+        if item is not None and not item.treeWidget() is None:
+            self.tree.setCurrentItem(item)
         self.status_msg.setText(f"已创建剧集: 第{ep.episode_num}集 - {title}")
 
     @Slot()
@@ -2526,6 +2542,19 @@ class MainWindow(QMainWindow):
         )
         p = self.db.get_project(project_id)
         self.tree.update_project(p)
+        # v1.1.5【C1 修复】:重命名后 _project_overview_cache 命中
+        # (cache_key = (project.id, len(eps))),右侧"📋 概览" tab 仍显示
+        # 旧项目名(title_box 的 <h2>{project.name}</h2> 在构造时就写死)。
+        # 修法:清 project_overview_cache,若当前正在看这个项目,主动刷一次。
+        self._project_overview_cache = None
+        if (
+            self._current_project is not None
+            and self._current_project.id == project_id
+        ):
+            # 重新拉一次,刷新内存里的 _current_project
+            self._current_project = p
+            eps = self.db.list_episodes(project_id)
+            self._show_project_overview(p, eps)
         self.status_msg.setText(f"已更新项目: {name}")
 
     @Slot(str)
@@ -2541,8 +2570,28 @@ class MainWindow(QMainWindow):
         )
         if ret != QMessageBox.StandardButton.Yes:
             return
+        # v1.1.5【B3 修复】:删除前先记下,看是不是当前正在看的。
+        # 之前删完直接 return → _current_project / _current_episode 还指向
+        # 已删 id 的 stale 对象 → 后续任何 _current_project.id 比较、
+        # db.get_project(...) 都会出错或右侧 tab 显示已删剧集的旧内容。
+        was_current = (
+            self._current_project is not None
+            and self._current_project.id == project_id
+        )
         self.db.delete_project(project_id)
         self.tree.remove_project(project_id)
+        if was_current:
+            self._current_project = None
+            self._current_episode = None
+            # 切回初始空态,清所有 cache 防 stale widget
+            self._invalidate_all_ui_caches()
+            # 清空右侧所有 tab,用占位 tab 替
+            self.tabs.setCurrentIndex(0)
+            self._replace_tab(0, self._placeholder_tab("（项目已删除）"), "📋 概览")
+            # 同步 toolbar 状态
+            if hasattr(self, "_act_new_episode"):
+                self._act_new_episode.setEnabled(False)
+            self.btn_open_project_dir.setEnabled(False)
         self.status_msg.setText(f"已删除项目: {p.name}")
 
     @Slot(str)
@@ -2566,7 +2615,25 @@ class MainWindow(QMainWindow):
         self.db.update_episode(
             episode_id, title=title, script=script
         )
+        # v1.1.5【C2 修复】:之前只 _reload_projects()(只刷 tree),没 invalidate
+        # episode_detail_cache / prompt_tab_cache / video_tab_cache,导致:
+        # - _episode_detail_cache id-only 命中 → tab 还显示旧 title/script
+        # - _prompt_tab_cache key 含 hash(ep.prompt),prompt 没变就 OK
+        # - _video_tab_cache key 含 hash(video_segments)/hash(prompt),都没变 OK
+        # 修法:invalidate 所有 cache(只多花 200-800ms 重建一次,user 刚点"保存"了)
+        # + 如果当前正在看这个剧集,主动刷详情页让用户立刻看到改动。
+        self._invalidate_all_ui_caches()
         self._reload_projects()
+        if (
+            self._current_episode is not None
+            and self._current_episode.id == episode_id
+        ):
+            ep_fresh = self.db.get_episode(episode_id)
+            if ep_fresh is not None and self._current_project is not None:
+                self._current_episode = ep_fresh
+                self._show_episode_detail(ep_fresh, self._current_project)
+                self._show_prompt_tab(ep_fresh, self._current_project)
+                self._show_video_tab(ep_fresh, self._current_project)
         self.status_msg.setText(f"已更新剧集: 第{num}集 - {title}")
 
     @Slot(str)
@@ -2582,8 +2649,29 @@ class MainWindow(QMainWindow):
         )
         if ret != QMessageBox.StandardButton.Yes:
             return
+        # v1.1.5【B4 修复】:删除前记下,看是不是当前正在看的剧集。
+        # 之前删完只调 self.tree.remove_episode → _current_episode 还指向
+        # 已删 id 的 stale 对象;另外 remove_episode 不会更新项目行的"(N)" 计数。
+        was_current = (
+            self._current_episode is not None
+            and self._current_episode.id == episode_id
+        )
+        project_id = ep.project_id
         self.db.delete_episode(episode_id)
-        self.tree.remove_episode(episode_id)
+        # 重新拉剩余剧集并刷 tree 括号数字(N)
+        try:
+            eps_after = self.db.list_episodes(project_id)
+            self.tree.set_episodes(project_id, eps_after)
+        except Exception as e:
+            log.exception("delete_episode: 刷剧集列表失败: %s", e)
+        if was_current:
+            self._current_episode = None
+            self._invalidate_all_ui_caches()
+            # 切回项目概览
+            proj = self.db.get_project(project_id)
+            if proj is not None:
+                self._current_project = proj
+                self._on_project_selected(project_id)
         self.status_msg.setText(f"已删除剧集: 第{ep.episode_num}集")
 
     # ---------- 生成操作 ----------
@@ -3186,11 +3274,18 @@ class MainWindow(QMainWindow):
                 f"（{len(merged)} 字,已保存到 db + 磁盘）",
             )
         # 刷新当前详情页
+        # v1.1.5【致命 BUG 修复】:之前这里调 self._show_storyboard_tab(...)
+        # 但这个方法不存在!整个文件 grep 0 处定义,只有这里 1 次引用。
+        # 实际分镜 tab 的方法是 _show_episode_detail(line 789)。
+        # 后果:用户点"📥 导入剧本"按钮 → AttributeError → Qt 弹"内部错误"
+        # → 整个导入剧本功能是坏的,user 报告"按钮没反应"。
+        # 修法:改名 + 前面加 _invalidate_all_ui_caches() 防 _episode_detail_cache
+        # 命中旧 widget(id-only cache)。
+        self._invalidate_all_ui_caches()
         ep_updated = self.db.get_episode(ep.id)
         if ep_updated:
             self._current_episode = ep_updated
             self._show_episode_detail(ep_updated, self._current_project)
-            self._show_storyboard_tab(ep_updated, self._current_project)
 
     def _storyboard_file_path(self) -> Optional[Path]:
         if not self._current_episode or not self._current_project:
@@ -3399,7 +3494,19 @@ class MainWindow(QMainWindow):
         # (复刻 D:\剧本分镜助手\ 老的 server.py:任务失败时返回 stderr 给前端
         # 让前端用 toast 提示 "模型配置可能有问题"的友好 UX,manju 之前只把
         # stderr 塞 log_buffer,用户在主窗口看不到关键错误。)
-        if task.__class__.__name__ in ("StoryboardTask", "VideoPromptTask", "AssetExtractTask"):
+        # v1.1.5【C3 修复】:之前只对 StoryboardTask / VideoPromptTask /
+        # AssetExtractTask 三类 LLM task 弹"换模型"对话框,资产生图 / 批量
+        # 生图 / 生视频失败时**不弹** → 换完 model 后没生效(401/403),用户
+        # 看不到"换模型"提示,只能去 log_buffer 翻 stderr。
+        # 修法:扩到所有 6 类 task。
+        if task.__class__.__name__ in (
+            "StoryboardTask",
+            "VideoPromptTask",
+            "AssetExtractTask",
+            "AssetImageTask",
+            "BatchAssetImageTask",
+            "VideoTask",
+        ):
             self._maybe_prompt_model_switch(task, reason)
 
     def _maybe_prompt_model_switch(self, task: Task, reason: str) -> None:

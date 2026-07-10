@@ -1118,6 +1118,18 @@ class SettingsDialog(QDialog):
                 )
                 log.warning("fetch_models failed: %s", e)
                 return
+            except Exception as e:
+                # v1.1.5【C5 修复】:非 DreaminaModelsError 异常(网络 timeout /
+                # ConnectionError / SSL 错误等)之前会被外层 try/finally 吞,
+                # 按钮停 1-2 秒后恢复"🔄 拉取",但用户看不到任何错误。
+                # 修法:加兜底 except,弹错误框。
+                QMessageBox.warning(
+                    self, "拉取异常",
+                    f"拉取模型列表异常：\n{type(e).__name__}: {e}\n\n"
+                    f"（请检查网络/Base URL/API Key）",
+                )
+                log.exception("fetch_models exception")
+                return
             # v0.7.8.11【无兜底】：下拉项 = fetched + saved 去重，**不**拼 4 个 seedance
             saved = self._raw.get("dreamina_models", []) or []
             seen: set = set()
@@ -1973,6 +1985,16 @@ class SettingsDialog(QDialog):
                 )
                 log.warning("fetch_video_api_models failed: %s", e)
                 return
+            except Exception as e:
+                # v1.1.5【C5 修复】:同 _on_fetch_models,加兜底 except 防
+                # 网络异常被外层 try/finally 吞(用户看不到任何错误)。
+                QMessageBox.warning(
+                    self, "拉取异常",
+                    f"拉取视频模型列表异常：\n{type(e).__name__}: {e}\n\n"
+                    f"（请检查网络/Base URL/API Key）",
+                )
+                log.exception("fetch_video_api_models exception")
+                return
             # v0.7.8.38.3【拉取列表硬约束】：下拉框**只**显示新拉取的 fetched。
             # 不混 saved_models，**不**用 merged 方式。用户当前选中的 model
             # 用 setEditText 写回（不 addItem，避免"历史模型进拉取列表"）。
@@ -2083,8 +2105,20 @@ class SettingsDialog(QDialog):
                 f"  • 探测位置：~/dreamina.exe / 项目目录 / ~/.local/bin / PATH",
             )
             return
-        # 跑 user_credit 试一下（不需要登录也能跑，只是返回 failed）
-        output = _dreamina_run_to_file(bin_path, "user_credit", timeout=10.0)
+        # v1.1.5【C6 修复】:之前 _dreamina_run_to_file 裸调,subprocess 启动
+        # 失败 / 输出 decode 错误 / unicode 异常会直接抛给 Qt 槽函数,触发
+        # "Qt 内部错误"弹窗或 crash。修法:加 try/except 弹友好错误。
+        try:
+            # 跑 user_credit 试一下（不需要登录也能跑，只是返回 failed）
+            output = _dreamina_run_to_file(bin_path, "user_credit", timeout=10.0)
+        except Exception as e:
+            QMessageBox.warning(
+                self, "测试失败",
+                f"调用 dreamina.exe 异常：\n{type(e).__name__}: {e}\n\n"
+                f"（检查路径/反病毒软件是否拦截/路径是否含中文空格）",
+            )
+            log.exception("_on_test_dreamina failed")
+            return
         QMessageBox.information(
             self, "测试通过",
             f"dreamina.exe 已找到：\n  {bin_path}\n\n"
@@ -2109,14 +2143,34 @@ class SettingsDialog(QDialog):
                 )
                 if ret != QMessageBox.StandardButton.Yes:
                     return
-        except Exception:
-            pass
+        except Exception as e:
+            # v1.1.5【C7 修复】:之前 `except Exception: pass` 静默吞
+            # → _dreamina_logged_in 抛任何异常都被无声跳过,被当作"未登录"
+            # 走后续 OAuth 流程 → user 看到"已登录"判定被静默跳过,误以为
+            # 已掉线。修法:加 log.warning 让日志有痕迹,但继续走 OAuth 流程
+            # (因为状态未知,让 user 重登更安全)。
+            log.warning("_dreamina_logged_in check failed: %s", e)
         # 启动 OAuth 流程
         self.btn_dreamina_login.setEnabled(False)
         self.btn_dreamina_login.setText("⏳ 获取中…")
         try:
             QApplication.processEvents()
-            ok, info = _dreamina_start_login(bin_path)
+            try:
+                ok, info = _dreamina_start_login(bin_path)
+            except Exception as e:
+                # v1.1.5【C7 修复】:之前 try/finally 没 except,
+                # _dreamina_start_login 内部 subprocess.run 启动失败 / 输出
+                # decode 错误会抛给 Qt signal → 弹"内部错误"或无反应,
+                # 按钮已被 finally 恢复成"🔐 登录" 但用户不知道为啥没反应。
+                # 修法:加 except 弹友好错误。
+                QMessageBox.critical(
+                    self, "启动失败",
+                    f"调用 dreamina.exe 启动 OAuth 异常：\n"
+                    f"{type(e).__name__}: {e}\n\n"
+                    f"（检查路径/反病毒软件是否拦截/路径是否含中文空格）",
+                )
+                log.exception("_on_dreamina_login start failed")
+                return
         finally:
             self.btn_dreamina_login.setEnabled(True)
             self.btn_dreamina_login.setText("🔐 登录")

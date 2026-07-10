@@ -456,6 +456,25 @@ class StoryboardTask(Task):
         # run() 完后由 _persist_task_result 读这两个字段
         self.result_content: str = ""
         self._result_output_file: Optional[Path] = None
+        # 内部 ManjuTask 引用，cancel 时用来调 mt.cancel() 把 SIGTERM 发给 hermes
+        self._mt: Optional["ManjuTask"] = None
+
+    def cancel(self) -> None:
+        """v1.1.5【B5 修复】:覆写 base cancel,把 cancel 传给内部 ManjuTask。
+
+        之前 v1.1.4 之前**漏了**这个 override → base Task.cancel() 只设
+        _cancel_event(generators.py:104),mt.run() 是阻塞调用根本看不到,
+        hermes 子进程永远不退出,user 点"取消"等满 7200s(2 小时)超时。
+
+        对比 AssetExtractTask.cancel() (line 1135-1146) / VideoPromptTask
+        .cancel() (line 661-670) 都有这个 override,只有 StoryboardTask 漏。
+        """
+        super().cancel()  # 仍设 _cancel_event(给业务层检查用)
+        if self._mt is not None:
+            try:
+                self._mt.cancel()
+            except Exception:
+                pass
 
     def run(self) -> StoryboardResult:
         # v0.7.8.25:改回调 hermes storyboard profile(复刻老软件
@@ -1374,6 +1393,17 @@ def _run_one_asset_image(
     #      你就把这里的词原封不懂的发给api就行了"）
     # 3. 资产提取时 image_prompt = description 里"中文指令词"段（asset_parser 已实现）
     prompt = (getattr(asset, "image_prompt", "") or "").strip()
+
+    # v1.1.5【C4 修复】:之前空 prompt 直接发给 API,各家行为不一致
+    # (有的返回 400 报错,有的返回透明图,有的随机发挥)。修法:在源头
+    # 直接抛 RuntimeError,UI 弹"该资产 image_prompt 为空,请先在资产
+    # 列表里补全"提示。BatchAssetImageTask 会把这个资产计入 failures
+    # (line 1602-1614 的 try/except 已经接住,会自动计入 result_failures)。
+    if not prompt:
+        raise RuntimeError(
+            f"资产「{asset.name}」的 image_prompt 为空,无法生成参考图。"
+            f"请在资产列表里点「✏️ 编辑」补全「中文指令词」段后再试。"
+        )
 
     # v0.7.7：改用 ImageApiRunner 调 HTTP /v1/images/generations（OpenAI 兼容）
     # 复刻自老 software D:\剧本分镜助手\server.py:1795-1946。

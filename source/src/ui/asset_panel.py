@@ -128,8 +128,9 @@ def _win32_open_file_dialog(initial_dir: str = "") -> str:
         try:
             err = comdlg32.CommDlgExtendedError()
             log.warning("v0.7.8:Win32 GetOpenFileNameW 取消/失败,err=%d", err)
-        except Exception:
-            pass
+        except Exception as e:
+            # v1.1.5【C10 修复】:留 log 让用户能问的时候有迹可循
+            log.debug("comdlg32 不可用: %s", e)
         return ""
     return buf.value
 
@@ -611,6 +612,25 @@ class AssetPanel(QFrame):
             self._prompt_dirty = False
             self._prompt_save_lbl.setText("✓ 已保存")
             self._prompt_save_lbl.setStyleSheet("color: #4ADE80; font-size: 11px;")
+            # v1.1.5【B7 修复】:写库后必须更新 self._asset.image_prompt + 通知
+            # listw 的 UserRole(同 listw item 内存里的对象)。
+            # 之前只写库不更新内存 → 切到别的资产再切回来,show_asset 读
+            # self._asset.image_prompt(还是旧值)→ 提示词被旧值覆盖回滚。
+            # 修法:in-place 更新 dataclass 字段 + 从 db 拉 fresh asset 重置
+            # 内存引用 + 通知 listw item 更新 UserRole,下次切回来拿到新值。
+            self._asset = self._db.get_asset(self._asset.id) or self._asset
+            try:
+                self._asset.image_prompt = cur
+            except Exception:
+                # dataclass frozen 等极少数情况降级:重新赋值
+                pass
+            if hasattr(self, "listw") and self.listw is not None:
+                from PySide6.QtCore import Qt
+                for i in range(self.listw.count()):
+                    item = self.listw.item(i)
+                    if item and item.data(Qt.ItemDataRole.UserRole) is self._asset:
+                        item.setData(Qt.ItemDataRole.UserRole, self._asset)
+                        break
         except Exception:  # noqa: BLE001
             log.exception("update_asset_prompt failed")
             self._prompt_save_lbl.setText("✗ 保存失败，看 logs/manju.log")

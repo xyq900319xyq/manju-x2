@@ -51,6 +51,9 @@ class ProjectTree(QTreeWidget):
         item.setToolTip(0, project.description or project.name)
         self.addTopLevelItem(item)
         self._items[project.id] = item
+        # v1.1.5:返回 item,让 main_window 用 setCurrentItem 触发 selection
+        # (addTopLevelItem 不会自动触发 itemSelectionChanged,user 新建项目
+        # 后 _current_project 还是 None → toolbar"新建剧集"按钮是灰的)
         return item
 
     def update_project(self, project: Project) -> None:
@@ -61,12 +64,23 @@ class ProjectTree(QTreeWidget):
         item.setToolTip(0, project.description or project.name)
 
     def remove_project(self, project_id: str) -> None:
+        # v1.1.5【C8 修复】:takeTopLevelItem 会触发 itemSelectionChanged
+        # (Qt 行为:删的就是 currentItem 时 → currentItem 变 None → signal emit)
+        # → main_window._on_project_selected(None) 被调 → _current_project
+        # / _current_episode 设 None + 切到空态 → 跟 _on_delete_project 自己的
+        # cleanup 逻辑重复执行,可能导致 tab 被 _replace_tab 改两次,user 看到
+        # UI 闪烁或切错 tab。修法:remove 前 blockSignals,remove 后
+        # unblockSignals 之前,若想精确控制 selection 状态由 main_window 决定。
         item = self._items.pop(project_id, None)
         if not item:
             return
         idx = self.indexOfTopLevelItem(item)
         if idx >= 0:
-            self.takeTopLevelItem(idx)
+            self.blockSignals(True)
+            try:
+                self.takeTopLevelItem(idx)
+            finally:
+                self.blockSignals(False)
 
     def set_episodes(self, project_id: str, episodes: List[Episode]) -> None:
         proj_item = self._items.get(project_id)
@@ -75,20 +89,29 @@ class ProjectTree(QTreeWidget):
         # v0.7.8.49:已有剧集列表且数量一致 → 跳过重建(切回同项目不重画)
         if proj_item.childCount() == len(episodes):
             return
-        proj_item.takeChildren()
-        for ep in episodes:
-            self._add_episode_item(proj_item, ep)
-        proj_item.setExpanded(True)
+        # v1.1.5【C8 修复】:takeChildren 同样会触发 itemSelectionChanged
+        # (如果当前选的是这个项目下的某个剧集,删 child 把 currentItem 变 None)
+        # → main_window._on_episode_selected(None) early return,无害,但
+        # 跟 _on_delete_episode 自己的 cleanup 逻辑有重叠,这里保险 block 一下。
+        self.blockSignals(True)
+        try:
+            proj_item.takeChildren()
+            for ep in episodes:
+                self._add_episode_item(proj_item, ep)
+            proj_item.setExpanded(True)
+        finally:
+            self.blockSignals(False)
         # 同步括号里的数字
         p = self._project_from_item_text(proj_item.text(0))
         if p is not None:
             proj_item.setText(0, self._project_label(p, len(episodes)))
 
-    def add_episode(self, episode: Episode, project_name: str = "") -> None:
+    def add_episode(self, episode: Episode, project_name: str = "") -> QTreeWidgetItem:
         proj_item = self._items.get(episode.project_id)
         if not proj_item:
-            return
-        self._add_episode_item(proj_item, episode)
+            # v1.1.5:返回空 item 而不是 None(类型一致)
+            return QTreeWidgetItem()
+        child = self._add_episode_item(proj_item, episode)
         # 更新括号数字
         txt = proj_item.text(0)
         if "(" in txt:
@@ -100,15 +123,28 @@ class ProjectTree(QTreeWidget):
                 proj_item.setText(0, f"{base}({cnt + 1})")
             except ValueError:
                 pass
+        # v1.1.5:返回新建的 child item,让 main_window 用 setCurrentItem 触发
+        # _on_episode_selected(原 addChild 不触发 itemSelectionChanged,user
+        # 新建剧集后 _current_episode 还是 None/旧的,看不到新剧集的分镜 tab)
+        return child
 
     def remove_episode(self, episode_id: str) -> None:
-        for i in range(self.topLevelItemCount()):
-            top = self.topLevelItem(i)
-            for j in range(top.childCount()):
-                child = top.child(j)
-                if child.data(0, EPISODE_ROLE) == episode_id:
-                    top.removeChild(child)
-                    return
+        # v1.1.5【C8 修复】:removeChild 同样会触发 itemSelectionChanged
+        # (如果删的就是 currentItem → currentItem 变 None → signal emit)
+        # → main_window._on_episode_selected(None) early return,无害,但
+        # 跟 _on_delete_episode 自己的 cleanup 逻辑有重叠,这里保险 block。
+        # 修法:整个循环用 blockSignals 包起来。
+        self.blockSignals(True)
+        try:
+            for i in range(self.topLevelItemCount()):
+                top = self.topLevelItem(i)
+                for j in range(top.childCount()):
+                    child = top.child(j)
+                    if child.data(0, EPISODE_ROLE) == episode_id:
+                        top.removeChild(child)
+                        return
+        finally:
+            self.blockSignals(False)
 
     # ---------- 渲染 ----------
     def _project_label(self, p: Project, count: Optional[int] = None) -> str:

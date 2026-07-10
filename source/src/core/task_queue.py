@@ -242,8 +242,11 @@ class _QueueWorker(QObject):
         try:
             task._signals.progress.connect(self.task_phase_changed)
             task._signals.output.connect(self._on_task_output)
-        except Exception:
-            pass
+        except Exception as e:
+            # v1.1.5【C10 修复】:之前静默吞,emit 失败时 task_started/finished
+            # 信号没发,UI 状态卡住,user 不知道任务在跑。加 log.exception
+            # 让日志有痕迹,但仍然发 task_started(关键信号不能丢)。
+            log.exception("connect task signals failed: %s", e)
         self.task_started.emit(task)
 
         start = time.monotonic()
@@ -256,8 +259,11 @@ class _QueueWorker(QObject):
             task._set_state(TaskState.FAILED)
             try:
                 task.cleanup()
-            except Exception:
-                pass
+            except Exception as cleanup_e:
+                # v1.1.5【C10 修复】:之前静默吞,清理失败时 user 看到的"失败"
+                # 是 task.run 抛的,但清理错误(比如关闭文件、kill 子进程)也
+                # 失败会让资源泄漏。加 log 留痕迹。
+                log.warning("task cleanup failed (after run exception): %s", cleanup_e)
             self.task_failed.emit(task, str(e))
             return
 
@@ -268,8 +274,9 @@ class _QueueWorker(QObject):
             task._set_state(TaskState.CANCELLED)
             try:
                 task.cleanup()
-            except Exception:
-                pass
+            except Exception as cleanup_e:
+                # v1.1.5【C10 修复】:同 above,清理失败时记录
+                log.warning("task cleanup failed (after cancel): %s", cleanup_e)
             self.task_cancelled.emit(task)
             return
 
@@ -284,8 +291,9 @@ class _QueueWorker(QObject):
         )
         try:
             task.cleanup()
-        except Exception:
-            pass
+        except Exception as cleanup_e:
+            # v1.1.5【C10 修复】:同 above,清理失败时记录
+            log.warning("task cleanup failed (after success): %s", cleanup_e)
         self.task_finished.emit(task, result)
 
 

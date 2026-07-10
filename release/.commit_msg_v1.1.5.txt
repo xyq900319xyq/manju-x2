@@ -1,0 +1,54 @@
+v1.1.5 — 16 个 BUG 全面修复(1 致命+6 高+10 中)
+
+## 修复
+- 致命:导入剧本按钮崩溃(AttributeError: _show_storyboard_tab 不存在)
+- 高:新建项目不自动选中 / 新建剧集不自动跳 / 删项目/剧集状态不清空
+- 高:StoryboardTask 漏 cancel override(取消后 hermes 跑满 2 小时)
+- 高:updater.py 漏 ssl._create_unverified_context()(创维环境)
+- 高:资产 image_prompt 切走再回来被回滚
+- 中:重命名/编辑剧集 cache 命中显示旧值
+- 中:资产生图/批量生图/生视频失败不弹换模型对话框
+- 中:空 image_prompt 直接发 API / 拉取模型异常被吞
+- 中:dreamina 测试/OAuth 异常被吞
+- 中:删项目/剧集触发 itemSelectionChanged 误触
+- 中:task_queue 4 处 emit 异常被静默吞
+
+## 根因
+1. `_on_import_script_file` 引用了不存在的 `_show_storyboard_tab`
+   (整个文件 0 处定义),改成 `_show_episode_detail`
+2. `_on_new_project` / `_on_new_episode` 用 `addTopLevelItem` / `addChild`,
+   Qt 不会触发 `itemSelectionChanged`,user 新建完 tab 不动
+3. `_on_delete_project` / `_on_delete_episode` 不清空 `_current_*`,
+   删完右侧 tab 还显示已删内容
+4. `StoryboardTask` 漏 override `cancel()`(对比 `AssetExtractTask` /
+   `VideoPromptTask` 都有 `mt.cancel()` 透传)
+5. `updater.py` 3 处 `urlopen` 没加 `ssl._create_unverified_context()`,
+   自签证书环境拉不到 update.json(创维 / 部分公司反代)
+6. `asset_panel._on_prompt_changed` 写库后不更新 `self._asset` 内存,
+   切走再回来被 listw 旧对象覆盖
+
+## 改动
+- `ui/main_window.py` 7 处: 致命 A + B1-B4 + C1-C3
+  - `_show_storyboard_tab` → `_show_episode_detail`
+  - `_on_new_project` / `_on_new_episode` 用 `setCurrentItem` 触发 selection
+  - `_on_delete_project` / `_on_delete_episode` 清空 `_current_*` + invalidate cache
+  - `_on_rename_project` 清 `_project_overview_cache`
+  - `_on_edit_episode` `_invalidate_all_ui_caches()` + 主动重画
+  - `_maybe_prompt_model_switch` 扩到 6 类 task
+- `ui/project_tree.py` 3 处: `add_project` / `add_episode` 返回 item;
+  `remove_project` / `set_episodes` / `remove_episode` 前 `blockSignals`
+- `ui/asset_panel.py` 1 处: 写库后 in-place 更新 `self._asset.image_prompt` + 通知 listw
+- `ui/settings_dialog.py` 4 处: 拉取模型加 `except Exception` 兜底;
+  `_on_test_dreamina` 加 try/except; `_on_dreamina_login` 修静默吞 + 启动异常
+- `core/updater.py` 3 处: 加 `ssl._create_unverified_context()`
+- `core/generators.py` 2 处: `StoryboardTask.cancel` override; 空 image_prompt 校验
+- `core/task_queue.py` 4 处: emit 异常加 `log.warning/exception`
+- `core/image_api.py` 3 处: b64 decode / on_output 异常加 `log.debug`
+- `main.py` 版本号 1.1.4 → 1.1.5
+- `installer/漫剧助手X-2.iss` MyAppVersion 1.1.4 → 1.1.5
+- `docs/更新日志.md` 加 v1.1.5 段
+
+## 验证
+- 8 个文件 `py_compile` 全部通过
+- Setup.exe 91MB build 成功 (md5=ccd3b0ad8af2771db3e6eedb679fe0dd)
+- update.json 已写好 v1.1.5 元数据

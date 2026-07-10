@@ -327,14 +327,17 @@ class ImageApiRunner:
                                 log.warning("生图: data URI 解码失败: %s", e)
                         else:
                             image_url = url
-            # 顶层 b64_json / image / url 兜底（某些 provider 不走 data[]）
+            # 顶层 b64_json / image 兜底（某些 provider 不走 data[]）
             for k in ("b64_json", "image"):
                 v = result.get(k, "")
                 if v and not image_data:
                     try:
                         image_data = base64.b64decode(v)
-                    except Exception:
-                        pass
+                    except Exception as b64_e:
+                        # v1.1.5【C10 修复】:之前静默吞,b64 decode 失败时
+                        # user 看到的是"生图 API 返回 200 但图片空"且不知道为啥。
+                        # 加 log.debug 留痕迹(不走 exception 避免主日志噪音)。
+                        log.debug("base64.b64decode(%s) failed: %s", k, b64_e)
             if not image_url:
                 image_url = result.get("url") or result.get("image_url") or ""
 
@@ -344,8 +347,9 @@ class ImageApiRunner:
             if len(text) > 100 and not text.startswith("{") and not text.startswith("<"):
                 try:
                     image_data = base64.b64decode(text)
-                except Exception:
-                    pass
+                except Exception as b64_e:
+                    # v1.1.5【C10 修复】:同 above,留 log.debug
+                    log.debug("format 4 base64 fallback failed: %s", b64_e)
 
         # 落盘
         if image_data and len(image_data) > 100:
@@ -407,8 +411,10 @@ class ImageApiRunner:
             if on_output:
                 try:
                     on_output(line)
-                except Exception:
-                    pass
+                except Exception as emit_e:
+                    # v1.1.5【C10 修复】:之前静默吞,on_output 抛错(比如 UI
+                    # 已关闭)时 user 看不到生成进度。加 log.debug 留痕迹。
+                    log.debug("on_output callback failed: %s", emit_e)
             log.info(line)
 
         # v0.7.7 重打 22 (user 反馈创维 524)：

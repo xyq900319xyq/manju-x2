@@ -21,9 +21,11 @@ from __future__ import annotations
 import json
 import logging
 import os
+import ssl
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
@@ -186,7 +188,12 @@ def fetch_update_json(url: str = UPDATE_JSON_URL, timeout: int = HTTP_TIMEOUT) -
             url,
             headers={"User-Agent": "manju-x2-updater/1.0"},
         )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        # v1.1.5【B6 修复】:创维 / 部分公司反代用自签证书,urllib 默认
+        # verify=True 会拒。复刻 image_api.py:180 / generators.py:2326
+        # 已有的 ssl._create_unverified_context() 做法,关闭 SSL 验证。
+        # updater 之前漏了这步,创维环境拉不到 update.json。
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             if resp.status != 200:
                 return UpdateInfo(
                     error_msg=f"update.json HTTP {resp.status}",
@@ -247,7 +254,9 @@ def fetch_latest_release(repo: str = DEFAULT_GITHUB_REPO, timeout: int = HTTP_TI
                 "Accept": "application/vnd.github+json",
             },
         )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        # v1.1.5【B6 修复】:同 _fetch_update_json,加 SSL unverified context
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             if resp.status != 200:
                 return UpdateInfo(
                     error_msg=f"HTTP {resp.status}",
@@ -434,7 +443,11 @@ class _DownloadWorker(QObject):
                 self._url,
                 headers={"User-Agent": "manju-x2-updater/1.1"},
             )
-            with urllib.request.urlopen(req, timeout=300) as resp:
+            # v1.1.5【B6 修复】:下载 Setup.exe 同样需要 SSL unverified,
+            # 创维环境下 GitHub releases CDN 用的 Let's Encrypt 正常,
+            # 但部分公司反代会重写证书链。保险起见三处全加。
+            ctx = ssl._create_unverified_context()
+            with urllib.request.urlopen(req, timeout=300, context=ctx) as resp:
                 total = int(resp.headers.get("Content-Length", 0) or 0)
                 received = 0
                 last_pct = -1
