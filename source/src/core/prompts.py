@@ -460,7 +460,13 @@ def build_seedance_prompt(
     if len(prompt) <= HERMES_ARGV_LIMIT:
         return prompt, None
 
-    # 长:写临时文件 + 短 prompt
+    # v1.1.5.5【写临时文件让 hermes cat 读】:v1.1.5.5 之前 storyboard > 20000
+    # 字符会写临时文件让 hermes 用 terminal 工具 cat 读取。v1.1.5.5 EXE 装机时
+    # manju install 脚本**自带 PortableGit** + 设 HERMES_GIT_BASH_PATH
+    # (HKCU\Environment 注册表,跟老 software D:\剧本分镜助手\ 装 hermes 时一致),
+    # 所以 hermes terminal 工具能调 `bash -c 'cat <file>'`,**不**再爆
+    # "无法读取文件:Git Bash 未安装"。如果 user 删了 Git Bash / env var 被改,
+    # log warning 即可 — 不兜底截断(截断会 quality 降,user 明确反对)。
     try:
         import tempfile as _tmp
         import os as _os
@@ -487,7 +493,7 @@ def build_seedance_prompt(
         return short_prompt, tmp_sb_file
     except Exception as _e:
         logging.getLogger("manju.prompts").warning(
-            "写 seedance 临时文件失败,回退为 argv 方式: %s", _e,
+            "写 seedance 临时文件失败,继续用 argv 方式: %s", _e,
         )
         return prompt, None
 
@@ -568,7 +574,11 @@ def build_project_asset_prompt(
 
     prompt = "\n".join(parts)
 
-    # 7. 大数据集走临时文件
+    # v1.1.5.5【写临时文件让 hermes cat 读】:v1.1.5.5 EXE 装机时 manju install
+    # 脚本**自带 PortableGit** + 设 HERMES_GIT_BASH_PATH (HKCU\Environment
+    # 注册表,跟老 software D:\剧本分镜助手\ 装 hermes 时一致),hermes terminal
+    # 工具能调 `bash -c 'cat <file>'`,**不**再爆 "无法读取文件:Git Bash 未安装"。
+    # 不截断(截断会 quality 降,user 明确反对)。
     tmp_script_file: Optional[str] = None
     if len(prompt) > HERMES_ARGV_LIMIT:
         try:
@@ -591,7 +601,7 @@ def build_project_asset_prompt(
                 len(script_text), tmp_script_file,
             )
         except OSError as e:
-            log.warning("写临时文件失败，回退为 argv 方式：%s", e)
+            log.warning("写临时文件失败：%s", e)
             tmp_script_file = None
 
     return prompt, tmp_script_file

@@ -7,6 +7,12 @@ dist/
 *.spec.bak
 # 保留 *.spec 文件本身(给 build_x2.py 用)
 
+# ===== Installer 本地缓存 (build 时下,不入 repo) =====
+# v1.1.5.5 PortableGit 缓存 (build_x2.py step 0.5 下载,~80MB)
+installer/PortableGit/
+# 旧 MinGit zip 残留(已废弃,改用 PortableGit)
+installer/MinGit-*.zip
+
 # ===== Python 缓存 =====
 __pycache__/
 *.py[cod]

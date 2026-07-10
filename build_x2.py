@@ -87,12 +87,107 @@ def rename_spec():
     return dst
 
 
+def download_mingit() -> Path | None:
+    """v1.1.5.5 下载 PortableGit 64-bit (hermes 依赖的 Git Bash)~50MB,
+    解压到 installer/PortableGit/,给 .iss 装到 <install_root>\\PortableGit\\。
+
+    老 software D:\\剧本分镜助手\\ 装 hermes 时自带 PortableGit + 设
+    HERMES_GIT_BASH_PATH (hermes install 脚本),manju 跟老 software 行为一致。
+
+    v1.1.5.5【关键修复:用 PortableGit,不用 MinGit】:MinGit 是 minimal-automation
+    包,只含 git.exe + 库,**不**含 bash.exe / sh / cat / awk / sed / grep。
+    hermes terminal 工具要 `bash -c 'cat <file>'` 读长分镜/剧本 tmp file,
+    没 bash 直接报"无法读取文件:Git Bash 未安装"。PortableGit 是完整 Git for
+    Windows 免安装版,含 git.exe + bash.exe + POSIX coreutils 一切工具。
+    7z.exe self-extract 格式,直接 `Start-Process -ArgumentList "-o<dir>", "-y"`
+    自解压,**不**需要外部 7z.exe 工具。
+
+    PortableGit 实际结构(对比 MinGit 完全不同):
+    - cmd\git.exe
+    - bin\bash.exe          ← bash 在 bin/,不是 mingw64/bin/ 也不是 cmd/
+    - bin\cat.exe / sh.exe / awk.exe / sed.exe / grep.exe (POSIX coreutils)
+    - usr\bin\perl.exe / ssh.exe / curl.exe 等
+
+    缓存机制:installer/PortableGit/ 已存在且含 bash.exe 跳过下载。
+    """
+    target = INSTALLER / 'PortableGit'
+    # v1.1.5.5【PortableGit 实际结构】:bash.exe 在 <PortableGit>\bin\bash.exe
+    # (不是 mingw64\bin\,那是 MinGit 内部 mingw 工具路径;也不是 cmd\,那是完整 Git
+    # 安装包布局)。PortableGit 是自包含的完整 Git for Windows。
+    bash_exe = target / 'bin' / 'bash.exe'
+    if bash_exe.exists():
+        print(f'  ✓ PortableGit 缓存命中,跳过下载: {target}')
+        return target
+
+    # v1.1.5.5:用 PortableGit-2.54.0-64-bit.7z.exe,跟 hermes install.ps1:769 一致
+    asset_name = 'PortableGit-2.54.0-64-bit.7z.exe'
+    url = f'https://github.com/git-for-windows/git/releases/download/v2.54.0.windows.1/{asset_name}'
+    sfx_path = INSTALLER / asset_name
+    INSTALLER.mkdir(parents=True, exist_ok=True)
+
+    # v1.1.3.1:用 ssl._create_unverified_context() 创维 / 部分公司反代用自签证书
+    import ssl
+    import urllib.request
+    ctx = ssl._create_unverified_context()
+    print(f'  下载 PortableGit (~50MB)...')
+    print(f'  url: {url}')
+    try:
+        with urllib.request.urlopen(url, timeout=300, context=ctx) as resp:
+            data = resp.read()
+        sfx_path.write_bytes(data)
+        print(f'  ✓ 下载完成 {len(data):,} bytes → {sfx_path}')
+    except Exception as e:
+        print(f'  ✗ 下载失败: {type(e).__name__}: {e}')
+        if sfx_path.exists():
+            sfx_path.unlink()
+        return None
+
+    # v1.1.5.5:用 7z.exe self-extract 自解压,不需外部 7z 工具
+    # 跟 hermes install.ps1:794-796 完全一致
+    if target.exists():
+        shutil.rmtree(target, ignore_errors=True)
+    target.mkdir(parents=True, exist_ok=True)
+    print(f'  解压到 {target} (7z SFX 自解压,可能需要 10-30 秒)...')
+    proc = subprocess.run(
+        [str(sfx_path), f'-o{target}', '-y'],
+        capture_output=True, text=True, timeout=300,
+    )
+    if proc.returncode != 0:
+        print(f'  ✗ 解压失败 exit={proc.returncode}')
+        print(f'  stdout: {proc.stdout[:500]}')
+        print(f'  stderr: {proc.stderr[:500]}')
+        sfx_path.unlink()
+        return None
+    print(f'  ✓ 解压完成')
+
+    # 验证 bash.exe 存在
+    if not bash_exe.exists():
+        print(f'  ✗ 找不到 {bash_exe},PortableGit 解压结构可能变了')
+        return None
+    print(f'  ✓ bash.exe 在 {bash_exe}')
+
+    # 清理 sfx
+    sfx_path.unlink()
+    return target
+
+
 def main():
     step('0) 准备 spec')
     spec = rename_spec()
     if not spec.exists():
         sys.exit(f'找不到 spec: {spec}')
     print(f'  spec: {spec}')
+
+    step('0.5) 下载 PortableGit (hermes 依赖的 Git Bash) 到 installer/PortableGit/')
+    mingit = download_mingit()
+    if mingit is None:
+        print('  ⚠ PortableGit 下载/解压失败,user 装机后 hermes 可能报"无法读取文件:Git Bash 未安装"')
+        print('  建议手动下 https://github.com/git-for-windows/git/releases/download/v2.54.0.windows.1/PortableGit-2.54.0-64-bit.7z.exe')
+        print('  解压到 installer/PortableGit/ 后重跑 build_x2.py')
+    else:
+        # 算 PortableGit 大小
+        mingit_size = sum(p.stat().st_size for p in mingit.rglob('*') if p.is_file())
+        print(f'  PortableGit 大小: {mingit_size:,} bytes ({mingit_size / 1024 / 1024:.2f} MB)')
 
     step('1) 清理旧 dist / build')
     for d in [SOURCE / 'dist', SOURCE / 'build']:

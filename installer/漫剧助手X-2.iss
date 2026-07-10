@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.4"
+#define MyAppVersion "1.1.5.5"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -74,6 +74,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; 覆盖用户填的 API key。line 75 单独用 onlyifdoesntexist 装模板(首次安装时)。
 ; 之前没 Excludes → 升级后用户 API 配置被模板覆盖,API key 全部丢失。
 Source: "D:\漫剧助手\manju-x2\source\dist\漫剧助手X-2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "hermes_api.json"
+; v1.1.5.5【自带 Git Bash 装 hermes 依赖】:PortableGit 64-bit (~50MB) 从
+; build_x2.py step 0.5 下的 installer/PortableGit/ 拷到 <install_root>\PortableGit\。
+; 装后 hermes 端能调 `bash -c 'cat <file>'`,跟老 software D:\剧本分镜助手\
+; 装 hermes 时行为一致(hermes install 脚本自带 PortableGit + 设 HERMES_GIT_BASH_PATH)。
+; bash.exe 在 <PortableGit>\bin\bash.exe(PortableGit 实际解压结构:cmd\git.exe + bin\bash.exe + usr\bin\perl\ssh\curl)。
+; v1.1.5.5 build 第一版错误地用 MinGit(没 bash),改用 PortableGit(hermes 官方用)。
+Source: "D:\漫剧助手\manju-x2\installer\PortableGit\*"; DestDir: "{app}\PortableGit"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; 用户版 hermes_api.json 模板(只装一次,保留用户填的 API key)
 Source: "D:\漫剧助手\manju-x2\source\config\hermes_api.json"; DestDir: "{app}\config"; Flags: onlyifdoesntexist
 ; 文档
@@ -82,6 +89,15 @@ Source: "D:\漫剧助手\manju-x2\docs\API配置说明.md"; DestDir: "{app}\docs
 Source: "D:\漫剧助手\manju-x2\docs\更新日志.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 ; 卸载前确认
 Source: "D:\漫剧助手\manju-x2\docs\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+
+[Registry]
+; v1.1.5.5【设 HERMES_GIT_BASH_PATH env var】:HKCU\Environment 注册表项,hermes 端
+; (tools/environments/local.py:358) 读 `os.environ.get("HERMES_GIT_BASH_PATH")` 找 bash。
+; 不设 → hermes 走默认 bash 查找逻辑,Windows 找不到 → 报 "无法读取文件:Git Bash 未安装"。
+; PortableGit 实际解压结构是 <PortableGit>\bin\bash.exe (cmd\ 是 git.exe,usr\bin\ 是 perl\ssh\curl)。
+; Flags: uninsdeletevalue 卸载时自动清。errorignore flag 在 [Registry] 段不支持
+; (v1.1.5.5 build 测试发现),所以不写失败就编译失败 → 写 HKCU 通常 OK,无需 errorignore。
+Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "HERMES_GIT_BASH_PATH"; ValueData: "{app}\PortableGit\bin\bash.exe"; Flags: uninsdeletevalue
 
 [Icons]
 Name: "{group}\漫剧助手X-2"; Filename: "{app}\{#MyAppExeName}"

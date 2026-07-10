@@ -394,7 +394,11 @@ def _build_hermes_call(
             full_prompt = instruction
         return base + ["-q", full_prompt, "--quiet"], env, None
 
-    # 长：临时文件 + 短 prompt
+    # v1.1.5.5【写临时文件让 hermes cat 读】:v1.1.5.5 EXE 装机时 manju install
+    # 脚本**自带 PortableGit** + 设 HERMES_GIT_BASH_PATH (HKCU\Environment
+    # 注册表,跟老 software D:\剧本分镜助手\ 装 hermes 时一致),hermes terminal
+    # 工具能调 `bash -c 'cat <file>'`,**不**再爆 "无法读取文件:Git Bash 未安装"。
+    # 不截断(截断会 quality 降,user 明确反对)。
     import tempfile
     tmp = Path(tempfile.gettempdir()) / (
         f"_manju_{profile}_{os.getpid()}.md"
