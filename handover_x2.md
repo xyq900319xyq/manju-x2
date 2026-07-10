@@ -2,7 +2,7 @@
 
 ## 一、当前版本
 
-- v1.1.5.12 (2026-07-11) — 一键更新彻底修根因(dlg 挡 QMessageBox)
+- v1.1.5.13 (2026-07-11) — 装时 EXE 锁根因修复(restartreplace + PrepareToInstall)
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
 - 用户版 173 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
@@ -247,3 +247,22 @@ hermes terminal 工具要 `bash -c 'cat <file>'` 读长分镜/剧本 tmp file(>2
 - v1.1.4 的 main_window.py 用 `/CLOSEAPPLICATIONS` + `QApplication.quit()`(老代码)
 - v1.1.4 启动 v1.1.5.x Setup.exe,Setup.exe 弹"是否关闭应用"框,v1.1.4 user 看不到
 - **教 user 手动装**: v1.1.4 → 手动关 manju-x2 → 双击 `X-2_v1.1.5.12_Setup.exe` 装(因为 v1.1.4 自己的 main_window.py bug 让一键更新失败)
+
+## 十一、v1.1.5.13 — 装时 EXE 锁根因修复(2026-07-11)【本次】
+
+### 用户反馈触发
+> "用户都把1.1.4给删除了,然后安装新的1.1.5.12安装包,结果安好了还是1.1.4" + "同一个目录,同一个!!!"
+
+### 真正根因(EXE 文件锁)
+- `[Files]` 段虽然用了 `ignoreversion` flag,但 Inno Setup 默认**静默跳过被锁文件**:
+  - Windows 锁定 EXE 的场景:hermes.exe 子进程还在跑 / Windows Defender 实时扫描 / 360 占用
+  - 装前 user 自己看不到,装后 Inno Setup 也不报告
+  - 装完后 `{app}\漫剧助手X-2.exe` 还是老的 v1.1.4 EXE
+- user 启动的还是 v1.1.4 → 报"当前版本 v1.1.4"
+
+### 修复(双保险)
+1. `[Files]` 段 line 76 加 `restartreplace` flag
+2. `[Code]` 段加 `PrepareToInstall()` 回调,装前主动 taskkill 杀 漫剧助手X-2.exe / hermes.exe / python.exe
+
+### 硬约束
+v1.1.5.13 EXE 锁装时跳过覆盖(双保险 restartreplace + PrepareToInstall)
