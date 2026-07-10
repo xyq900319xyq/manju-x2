@@ -1,4 +1,4 @@
-﻿# cinematic
+# cinematic
 
 Wide panels, filmic feel
 

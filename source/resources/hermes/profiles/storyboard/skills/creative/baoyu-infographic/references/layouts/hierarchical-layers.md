@@ -1,4 +1,4 @@
-﻿# hierarchical-layers
+# hierarchical-layers
 
 Nested layers showing levels of importance, influence, or proximity.
 

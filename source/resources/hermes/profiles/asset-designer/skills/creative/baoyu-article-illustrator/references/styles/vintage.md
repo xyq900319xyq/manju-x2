@@ -1,4 +1,4 @@
-﻿# vintage
+# vintage
 
 Nostalgic aged-paper aesthetic for historical and heritage content
 

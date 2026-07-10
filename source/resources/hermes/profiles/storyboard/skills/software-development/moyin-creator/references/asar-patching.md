@@ -1,4 +1,4 @@
-﻿# ASAR Runtime Debug & Patch Reference
+# ASAR Runtime Debug & Patch Reference
 
 ## Button Click Verification (HTTP Ping Injection)
 

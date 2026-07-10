@@ -1,4 +1,4 @@
-﻿# Structured Content Template
+# Structured Content Template
 
 Template for generating structured infographic content that informs the visual designer.
 

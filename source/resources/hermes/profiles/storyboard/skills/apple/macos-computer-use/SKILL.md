@@ -1,4 +1,4 @@
-﻿---
+---
 name: macos-computer-use
 description: |
   Drive the macOS desktop in the background — screenshots, mouse, keyboard,

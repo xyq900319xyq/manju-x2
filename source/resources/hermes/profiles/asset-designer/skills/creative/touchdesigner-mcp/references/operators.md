@@ -1,4 +1,4 @@
-﻿# TouchDesigner Operator Reference
+# TouchDesigner Operator Reference
 
 ## Operator Families Overview
 

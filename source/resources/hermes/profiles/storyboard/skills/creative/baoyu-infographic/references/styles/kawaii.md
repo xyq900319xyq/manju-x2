@@ -1,4 +1,4 @@
-﻿# kawaii
+# kawaii
 
 Japanese cute style with big eyes and pastel colors
 

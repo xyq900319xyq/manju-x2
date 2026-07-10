@@ -1,4 +1,4 @@
-﻿# Hermes Workspace Swarm Mode Setup
+# Hermes Workspace Swarm Mode Setup
 
 **Context:** Hermes Workspace (https://github.com/outsourc-e/hermes-workspace) is a Web UI for Hermes Agent. It has two modes:
 

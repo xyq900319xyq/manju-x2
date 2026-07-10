@@ -1,4 +1,4 @@
-﻿---
+---
 name: moyin-creator-dev
 description: Develop, debug, and modify Moyin Creator (魔因漫创) — an Electron-based AI short drama tool. Covers the prompt pipeline, ASAR patching, contact sheet generation, template libraries, and image storage.
 ---

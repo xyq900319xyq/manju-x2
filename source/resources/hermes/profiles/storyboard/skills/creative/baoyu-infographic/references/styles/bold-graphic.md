@@ -1,4 +1,4 @@
-﻿# bold-graphic
+# bold-graphic
 
 High-contrast comic style with bold outlines and dramatic visuals.
 

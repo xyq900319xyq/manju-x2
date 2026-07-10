@@ -1,4 +1,4 @@
-﻿# GGUF Advanced Usage Guide
+# GGUF Advanced Usage Guide
 
 ## Speculative Decoding
 

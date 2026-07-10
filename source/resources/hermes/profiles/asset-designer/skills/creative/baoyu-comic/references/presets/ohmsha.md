@@ -1,4 +1,4 @@
-﻿# ohmsha
+# ohmsha
 
 Ohmsha预设 - Educational manga with visual metaphors
 

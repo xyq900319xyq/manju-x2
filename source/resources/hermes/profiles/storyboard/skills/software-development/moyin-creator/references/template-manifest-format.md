@@ -1,4 +1,4 @@
-﻿# Template Manifest Format (v0.2.8+)
+# Template Manifest Format (v0.2.8+)
 
 ## Where it's used
 

@@ -1,4 +1,4 @@
-﻿# GitHub REST API Cheatsheet
+# GitHub REST API Cheatsheet
 
 Base URL: `https://api.github.com`
 

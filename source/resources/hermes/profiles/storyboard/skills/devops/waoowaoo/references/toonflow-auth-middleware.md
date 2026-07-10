@@ -1,4 +1,4 @@
-﻿# Toonflow 认证中间件与静态文件服务
+# Toonflow 认证中间件与静态文件服务
 
 **项目**：[HBAI-Ltd/Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)  
 **架构**：Express.js + TypeScript，单体应用（非 Docker Compose）  

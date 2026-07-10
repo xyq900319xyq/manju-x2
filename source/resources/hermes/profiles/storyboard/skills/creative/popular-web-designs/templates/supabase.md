@@ -1,4 +1,4 @@
-﻿# Design System: Supabase
+# Design System: Supabase
 
 
 > **Hermes Agent — Implementation Notes**

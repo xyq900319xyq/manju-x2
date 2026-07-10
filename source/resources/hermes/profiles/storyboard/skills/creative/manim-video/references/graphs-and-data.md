@@ -1,4 +1,4 @@
-﻿# Graphs, Plots, and Data Visualization
+# Graphs, Plots, and Data Visualization
 
 ## Axes
 

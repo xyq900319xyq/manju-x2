@@ -1,4 +1,4 @@
-﻿# Design System: Claude (Anthropic)
+# Design System: Claude (Anthropic)
 
 
 > **Hermes Agent — Implementation Notes**

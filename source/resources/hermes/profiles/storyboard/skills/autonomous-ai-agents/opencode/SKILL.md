@@ -1,4 +1,4 @@
-﻿---
+---
 name: opencode
 description: "Delegate coding to OpenCode CLI (features, PR review)."
 version: 1.2.0

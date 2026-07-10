@@ -1,4 +1,4 @@
-﻿# Full Prompt Library
+# Full Prompt Library
 
 Extended constraint library beyond the core set in SKILL.md. Load these when the user wants more variety or a specific category.
 

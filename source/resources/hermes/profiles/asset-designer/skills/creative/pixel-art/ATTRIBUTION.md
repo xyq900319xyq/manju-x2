@@ -1,4 +1,4 @@
-﻿# Attribution
+# Attribution
 
 This skill bundles code ported from a third-party MIT-licensed project.
 All reuse is credited here.

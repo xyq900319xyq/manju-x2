@@ -1,4 +1,4 @@
-﻿# splash
+# splash
 
 Impact-focused, key moments
 

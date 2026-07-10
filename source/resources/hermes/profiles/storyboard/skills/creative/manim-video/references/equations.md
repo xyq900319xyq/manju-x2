@@ -1,4 +1,4 @@
-﻿# Equations and LaTeX Reference
+# Equations and LaTeX Reference
 
 ## Basic LaTeX
 

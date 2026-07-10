@@ -1,4 +1,4 @@
-﻿---
+---
 name: computer-use
 description: |
   Drive the user's desktop in the background — clicking, typing,

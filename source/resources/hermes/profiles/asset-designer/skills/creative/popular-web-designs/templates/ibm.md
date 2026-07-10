@@ -1,4 +1,4 @@
-﻿# Design System: IBM
+# Design System: IBM
 
 
 > **Hermes Agent — Implementation Notes**

@@ -1,4 +1,4 @@
-﻿---
+---
 name: wsl-development
 description: "WSL development patterns — file I/O performance cliffs, service management, and common pitfalls when developing on WSL."
 version: 1.0.0

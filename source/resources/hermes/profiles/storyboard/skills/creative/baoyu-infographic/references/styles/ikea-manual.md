@@ -1,4 +1,4 @@
-﻿# ikea-manual
+# ikea-manual
 
 Minimal line art assembly instruction style
 

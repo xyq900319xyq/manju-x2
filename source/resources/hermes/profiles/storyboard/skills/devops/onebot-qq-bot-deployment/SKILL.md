@@ -1,4 +1,4 @@
-﻿---
+---
 name: onebot-qq-bot-deployment
 category: devops
 description: 部署基于OneBot协议的QQ交互式机器人，支持对接Hermes Agent

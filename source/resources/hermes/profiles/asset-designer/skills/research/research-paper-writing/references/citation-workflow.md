@@ -1,4 +1,4 @@
-﻿# Citation Management & Hallucination Prevention
+# Citation Management & Hallucination Prevention
 
 This reference provides a complete workflow for managing citations programmatically, preventing AI-generated citation hallucinations, and maintaining clean bibliographies.
 

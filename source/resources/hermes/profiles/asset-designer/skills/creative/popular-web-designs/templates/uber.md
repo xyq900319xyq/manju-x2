@@ -1,4 +1,4 @@
-﻿# Design System: Uber
+# Design System: Uber
 
 
 > **Hermes Agent — Implementation Notes**

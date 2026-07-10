@@ -1,4 +1,4 @@
-﻿# mixed
+# mixed
 
 Dynamic, varied rhythm
 

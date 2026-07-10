@@ -1,4 +1,4 @@
-﻿# AudioCraft Advanced Usage Guide
+# AudioCraft Advanced Usage Guide
 
 ## Fine-tuning MusicGen
 

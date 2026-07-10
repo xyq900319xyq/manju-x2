@@ -1,4 +1,4 @@
-﻿# Post-FX Reference
+# Post-FX Reference
 
 Bloom, CRT scanlines, chromatic aberration, and feedback glow patterns for live visual work.
 

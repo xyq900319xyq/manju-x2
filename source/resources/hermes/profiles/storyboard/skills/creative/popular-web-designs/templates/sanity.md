@@ -1,4 +1,4 @@
-﻿# Design System: Sanity
+# Design System: Sanity
 
 
 > **Hermes Agent — Implementation Notes**

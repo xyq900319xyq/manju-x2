@@ -1,4 +1,4 @@
-﻿# Design System: MongoDB
+# Design System: MongoDB
 
 
 > **Hermes Agent — Implementation Notes**

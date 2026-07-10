@@ -1,4 +1,4 @@
-﻿# Design System: Kraken
+# Design System: Kraken
 
 
 > **Hermes Agent — Implementation Notes**

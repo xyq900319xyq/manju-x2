@@ -1,4 +1,4 @@
-﻿# Operator Tips
+# Operator Tips
 
 ## Wireframe Rendering Pattern
 

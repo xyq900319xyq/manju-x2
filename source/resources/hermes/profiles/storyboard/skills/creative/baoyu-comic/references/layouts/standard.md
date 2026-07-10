@@ -1,4 +1,4 @@
-﻿# standard
+# standard
 
 Classic comic grid, versatile
 

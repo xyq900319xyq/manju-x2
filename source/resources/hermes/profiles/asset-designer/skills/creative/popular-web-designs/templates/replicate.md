@@ -1,4 +1,4 @@
-﻿# Design System: Replicate
+# Design System: Replicate
 
 
 > **Hermes Agent — Implementation Notes**

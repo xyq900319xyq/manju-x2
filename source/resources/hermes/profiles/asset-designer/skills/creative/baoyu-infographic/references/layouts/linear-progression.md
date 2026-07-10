@@ -1,4 +1,4 @@
-﻿# linear-progression
+# linear-progression
 
 Sequential progression showing steps, timeline, or chronological events.
 

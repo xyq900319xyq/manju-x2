@@ -1,4 +1,4 @@
-﻿---
+---
 name: electron-asar-patching
 description: Extract, modify, and repack Electron app.asar archives to fix bugs or change behavior in bundled desktop apps without access to source builds. Covers the full modify-repack-replace-restart cycle, pitfalls with minified JS editing, and project-specific conventions for 魔因漫创 (moyin-creator).
 ---

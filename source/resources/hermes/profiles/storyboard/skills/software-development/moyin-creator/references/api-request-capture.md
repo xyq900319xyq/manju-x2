@@ -1,4 +1,4 @@
-﻿# API Request Capture Methods for Moyin Creator
+# API Request Capture Methods for Moyin Creator
 
 ## Context
 When debugging prompt compilation or API integration issues, you need to capture the exact request body (model, messages, temperature, max_tokens) and prompts (system + user) that 魔因 sends to the API endpoint.

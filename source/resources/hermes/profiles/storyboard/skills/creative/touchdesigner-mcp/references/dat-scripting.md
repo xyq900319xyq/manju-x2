@@ -1,4 +1,4 @@
-﻿# DAT-Based Scripting Reference
+# DAT-Based Scripting Reference
 
 TD's event/callback model — Python that runs in response to network events. The full set of "Execute DATs" plus their idiomatic patterns.
 

@@ -1,4 +1,4 @@
-﻿# Design System: Zapier
+# Design System: Zapier
 
 
 > **Hermes Agent — Implementation Notes**

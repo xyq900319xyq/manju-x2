@@ -1,4 +1,4 @@
-﻿# OBLITERATUS Methods — Detailed Guide
+# OBLITERATUS Methods — Detailed Guide
 
 > The CLI accepts 9 methods via `--method`: basic, advanced, aggressive, spectral_cascade,
 > informed, surgical, optimized, inverted, nuclear.

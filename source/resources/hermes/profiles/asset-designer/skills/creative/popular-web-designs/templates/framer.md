@@ -1,4 +1,4 @@
-﻿# Design System: Framer
+# Design System: Framer
 
 
 > **Hermes Agent — Implementation Notes**

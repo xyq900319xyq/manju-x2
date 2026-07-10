@@ -1,4 +1,4 @@
-﻿# Comic Content Analysis Framework
+# Comic Content Analysis Framework
 
 Deep analysis framework for transforming source content into effective visual storytelling.
 

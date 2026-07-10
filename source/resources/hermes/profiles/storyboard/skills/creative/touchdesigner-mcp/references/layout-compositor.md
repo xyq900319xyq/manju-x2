@@ -1,4 +1,4 @@
-﻿# Layout Compositor Reference
+# Layout Compositor Reference
 
 Patterns for building modular multi-panel grids — useful for HUD interfaces, data dashboards, and multi-source visual composites.
 

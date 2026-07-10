@@ -1,4 +1,4 @@
-﻿# Issue Taxonomy
+# Issue Taxonomy
 
 Use this taxonomy to classify issues found during dogfood QA testing.
 

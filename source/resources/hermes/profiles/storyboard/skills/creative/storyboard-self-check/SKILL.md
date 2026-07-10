@@ -1,4 +1,4 @@
-﻿---
+---
 name: storyboard-self-check
 description: 分镜交付前质量自检——两轮强制检查流程。在生成完整分镜表后、交付给用户之前，必须逐项执行本技能中的检查清单。通过后方可交付。
 version: 1.0.0

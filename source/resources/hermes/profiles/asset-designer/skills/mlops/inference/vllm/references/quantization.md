@@ -1,4 +1,4 @@
-﻿# Quantization Guide
+# Quantization Guide
 
 ## Contents
 - Quantization methods comparison

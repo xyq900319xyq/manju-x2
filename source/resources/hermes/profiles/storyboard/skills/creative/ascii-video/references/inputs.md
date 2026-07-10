@@ -1,4 +1,4 @@
-﻿# Input Sources
+# Input Sources
 
 > **See also:** architecture.md · effects.md · scenes.md · shaders.md · optimization.md · troubleshooting.md
 

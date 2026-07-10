@@ -1,4 +1,4 @@
-﻿# Style Presets
+# Style Presets
 
 A preset expands to a type + style + optional palette combination. Users can override any dimension in their request.
 

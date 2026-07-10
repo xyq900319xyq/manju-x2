@@ -1,4 +1,4 @@
-﻿---
+---
 name: waoowaoo
 description: Deploy, debug, and operate the waoowaoo open-source AI short drama/comic tool via Docker Compose on Windows + WSL. Covers deployment, China network workarounds, API key debugging, and template mismatch fixes.
 ---

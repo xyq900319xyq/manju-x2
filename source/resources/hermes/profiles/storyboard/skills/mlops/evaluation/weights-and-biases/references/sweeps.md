@@ -1,4 +1,4 @@
-﻿# Comprehensive Hyperparameter Sweeps Guide
+# Comprehensive Hyperparameter Sweeps Guide
 
 Complete guide to hyperparameter optimization with W&B Sweeps.
 

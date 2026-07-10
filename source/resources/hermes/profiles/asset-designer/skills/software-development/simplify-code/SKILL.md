@@ -1,4 +1,4 @@
-﻿---
+---
 name: simplify-code
 description: "Parallel 3-agent cleanup of recent code changes."
 version: 1.0.0

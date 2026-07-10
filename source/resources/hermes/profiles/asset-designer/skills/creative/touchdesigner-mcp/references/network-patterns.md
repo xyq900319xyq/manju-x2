@@ -1,4 +1,4 @@
-﻿# TouchDesigner Network Patterns
+# TouchDesigner Network Patterns
 
 Complete network recipes for common creative coding tasks. Each pattern shows the operator chain, MCP tool calls to build it, and key parameter settings.
 

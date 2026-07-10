@@ -1,4 +1,4 @@
-﻿Create a knowledge biography comic page following these guidelines:
+Create a knowledge biography comic page following these guidelines:
 
 ## Image Specifications
 

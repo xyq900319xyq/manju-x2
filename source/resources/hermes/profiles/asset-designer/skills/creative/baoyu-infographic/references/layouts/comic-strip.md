@@ -1,4 +1,4 @@
-﻿# comic-strip
+# comic-strip
 
 Sequential narrative panels telling a story or explaining a concept.
 

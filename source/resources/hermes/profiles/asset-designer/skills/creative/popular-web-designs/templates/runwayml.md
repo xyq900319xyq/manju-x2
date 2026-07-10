@@ -1,4 +1,4 @@
-﻿# Design System: Runway
+# Design System: Runway
 
 
 > **Hermes Agent — Implementation Notes**

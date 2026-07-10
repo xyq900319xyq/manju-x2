@@ -1,4 +1,4 @@
-﻿# Workspace Swarm: Batch Profile Creation
+# Workspace Swarm: Batch Profile Creation
 
 **Problem:** Manual creation of 10 worker profiles takes 4-8 hours. This reference provides a **working batch automation** that creates all profiles, wrappers, and configs in ~2 minutes.
 

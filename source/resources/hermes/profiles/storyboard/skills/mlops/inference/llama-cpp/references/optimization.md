@@ -1,4 +1,4 @@
-﻿# Performance Optimization Guide
+# Performance Optimization Guide
 
 Maximize llama.cpp inference speed and efficiency.
 

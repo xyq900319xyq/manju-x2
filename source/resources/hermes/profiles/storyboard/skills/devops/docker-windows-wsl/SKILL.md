@@ -1,4 +1,4 @@
-﻿---
+---
 name: docker-windows-wsl
 description: Docker operations on Windows from WSL — use when Docker is installed on Windows (Docker Desktop) but not available inside the WSL distro. Covers the PowerShell bridge pattern for docker compose, image pulling, and container management.
 ---
