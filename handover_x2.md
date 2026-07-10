@@ -2,7 +2,7 @@
 
 ## 一、当前版本
 
-- v1.1.5.5 (2026-07-10) — 自带 Git Bash (PortableGit) 装机
+- v1.1.5.12 (2026-07-11) — 一键更新彻底修根因(dlg 挡 QMessageBox)
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
 - 用户版 173 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
@@ -189,3 +189,61 @@ hermes terminal 工具要 `bash -c 'cat <file>'` 读长分镜/剧本 tmp file(>2
 
 ### 硬约束
 `project_memory.md` 加 v1.1.5.5 自带 Git Bash 装机 + version bump 三处一致 2 条硬约束
+
+## 九、v1.1.5.6~v1.1.5.10 — 一键更新第一轮修复(治标)
+
+### v1.1.5.6 (2026-07-10) — bash 探测 8 候选路径 + 注入 env
+- user 反馈 "hermes.exe 找不到 bash,报 hermes-gemini-2.5-pro 模型需要 bash"
+- 修法: `core/generators.py` 实现 `_find_bash_exe()` 探测 8 个候选路径,`_ensure_hermes_bash_env()` 注入 env var,装机首次启动即生效
+- 硬约束: v1.1.5.6 Git Bash 主动探测
+
+### v1.1.5.7 (2026-07-10) — seedance-prompt profile v3.2.0 同步
+- user 反馈 "我的profile seedance-prompt更新了"
+- 修法: 手动从 D:\hermes\profiles\seedance-prompt 拷贝到 source/resources/hermes/profiles/seedance-prompt
+- 硬约束: v1.1.5.7 profile 同步手动
+
+### v1.1.5.8 (2026-07-10) — 3 profile 全量对齐 D:\hermes\(根)
+- user 反馈 "全部与D:\hermes\ 对齐"
+- 修法: `release/.sync_profiles.py` 全量同步 3 个 profile(asset-designer / seedance-prompt / storyboard)
+- 硬约束: v1.1.5.8 3 profile 全量对齐 + `git add profiles/` 不能加 -f
+- commit `8304559`,已发 release
+
+### v1.1.5.9 (2026-07-10) — /FORCECLOSEAPPLICATIONS 修复
+- user 反馈 "用户更新安装完软件却依旧是老版本"
+- 根因: `/CLOSEAPPLICATIONS` 弹"是否关闭应用"确认框,user 看不到 → 装失败
+- 修法: 改 `/FORCECLOSEAPPLICATIONS` + QTimer 500ms 改 1500ms
+- 硬约束: v1.1.5.9 /FORCECLOSEAPPLICATIONS
+- commit `cc60f36`,已发 release
+
+### v1.1.5.10 (2026-07-10) — Inno Setup [Code] 去 MsgBox + os._exit 强退
+- user 反馈 "用户下载安装的,依旧显示这样,更新也更新不了"
+- 根因: .iss [Code] 段 `NeedRestart()` 的 MsgBox() 不受 /VERYSILENT /SUPPRESSMSGBOXES 抑制,强制弹"是否继续"框,user 看不到 → 装失败
+- 修法: `NeedRestart()` 去掉 MsgBox,直接 taskkill /F /IM 静默杀旧 EXE;`main_window.py` 改 `os._exit(0)` 强退
+- 硬约束: v1.1.5.10 Inno Setup [Code] MsgBox
+- commit `c92be98`,已发 release
+
+## 十、v1.1.5.11~v1.1.5.12 — 一键更新第二轮修复(治本 + 甩锅教训)
+
+### v1.1.5.11 (2026-07-10) — QProgressDialog 去取消按钮(不彻底)
+- user 反馈 "从日志可以看到,所有版本下载成功后都显示'用户取消',没有触发安装流程"
+- **assistant 当时推断"user 误点取消按钮"**(甩锅了,实际上是错的)
+- 修法: QProgressDialog 第二参改 `""` 去取消按钮;`_on_finished/_on_error` 改 `deleteLater()` 不用 `close()`
+- commit `1479b47`,**未发 release**
+
+### v1.1.5.12 (2026-07-11) — 彻底修根因(dlg 挡 QMessageBox)【本次】
+- user 强烈反馈 **"你别甩锅了,用户没有取消,不管是任何按键都没取消,重点是软件没用启动安装你不明白吗"**
+- **assistant 承认之前甩锅甩错了**:log 里的"用户取消"是 QProgressDialog 销毁时 emit canceled signal 触发 cancel() 写的,**不是 user 主动**。完全是我代码 BUG,不是 user 操作问题。
+- **真正根因**: `_on_finished` 调 `dlg.deleteLater()` 只是 schedule delete,Qt 不立即销毁,dlg 仍处 main_window 子 widget 树中,在 z-order 上层挡住 `_launch_setup_silent` 弹的 QMessageBox("v 安装包已就绪,点「是」立即安装")。user 看不到 QMessageBox → 自然没点「是」→ Setup.exe 永远没启动
+- **修法(必须三管齐下)**:
+  1. `dlg.setParent(None)` 切断 z-order 关系
+  2. `dlg.hide()` 立即隐藏
+  3. `dlg.deleteLater()` 调度销毁
+- **log 文字改明确**: `core/updater.py` `cancel()` log 从 `"用户取消"` 改为 `"内部 cancel signal(非用户主动,通常是 dlg 销毁触发)"`,避免 user 再误读
+- **教训**: 任何"user 操作"假设之前必须先排除"代码自身 race/signal/z-order",不要轻率甩锅给 user
+- 硬约束: v1.1.5.12 dlg 挡 QMessageBox(甩锅甩错教训)
+- commit `5a0438c`,**等 user 给 PAT 发 release**
+
+### v1.1.4 装 v1.1.5.x 死锁问题(未解决,需要 user 手动操作)
+- v1.1.4 的 main_window.py 用 `/CLOSEAPPLICATIONS` + `QApplication.quit()`(老代码)
+- v1.1.4 启动 v1.1.5.x Setup.exe,Setup.exe 弹"是否关闭应用"框,v1.1.4 user 看不到
+- **教 user 手动装**: v1.1.4 → 手动关 manju-x2 → 双击 `X-2_v1.1.5.12_Setup.exe` 装(因为 v1.1.4 自己的 main_window.py bug 让一键更新失败)
