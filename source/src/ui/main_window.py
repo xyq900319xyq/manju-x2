@@ -443,8 +443,13 @@ class MainWindow(QMainWindow):
         dest = os.path.join(temp_dir, f"manju-x2-v{info.latest_version}-Setup.exe")
         # 起下载器
         self._downloader = UpdateDownloader(self)
+        # v1.1.5.11【去取消按钮】:QProgressDialog 第二个参数原本是 "取消" 按钮 label,
+        # user 在下载过程中(progress 80%)点"取消"按钮 → dlg.canceled 触发 →
+        # _cancel = True → worker 立即 emit error("用户取消") + 删文件 + return。
+        # user 误以为 dialog 卡住,点"取消"想关 dialog,实际触发了 download cancel。
+        # 改成 "" 不显示取消按钮,避免 user 误点。下载是后台行为,不需要 user 中断。
         dlg = QProgressDialog(
-            f"正在下载 v{info.latest_version} 安装包…", "取消", 0, 100, self,
+            f"正在下载 v{info.latest_version} 安装包…", "", 0, 100, self,
         )
         dlg.setWindowTitle("一键更新")
         dlg.setWindowModality(Qt.WindowModal)
@@ -459,13 +464,27 @@ class MainWindow(QMainWindow):
                 dlg.setValue(pct)
 
         def _on_finished(path: str) -> None:
-            dlg.close()
+            # v1.1.5.11【不再 close 触发 canceled】:QProgressDialog.close() 会
+            # 触发 closeEvent → cancel() → emit canceled 信号。如果之前 disconnect
+            # 失败或忘记 disconnect,会触发 _downloader.cancel() 设 _cancel = True,
+            # 导致后续 race(虽然 worker 已 return,无影响,但代码意图不清)。
+            # 用 deleteLater 替代 close,显式安全。
+            try:
+                dlg.canceled.disconnect(self._downloader.cancel)
+            except (RuntimeError, TypeError):
+                pass
+            dlg.deleteLater()
             self.status_msg.setText(f"✅ v{info.latest_version} 下载完成,准备安装…")
             log.info("下载完成 %s,准备启动静默安装", path)
             self._launch_setup_silent(path, info.latest_version)
 
         def _on_error(msg: str) -> None:
-            dlg.close()
+            # v1.1.5.11 同 _on_finished:用 deleteLater 不用 close
+            try:
+                dlg.canceled.disconnect(self._downloader.cancel)
+            except (RuntimeError, TypeError):
+                pass
+            dlg.deleteLater()
             log.warning("下载失败: %s", msg)
             # v1.1.3【防 UnicodeEncodeError】:info.html_url 在 v1.1.2
             # 之前的 update.json 是 ".../docs/更新日志.md"(中文路径)。
