@@ -2,10 +2,10 @@
 
 ## 一、当前版本
 
-- v1.1.5 (2026-07-10)
+- v1.1.5.5 (2026-07-10) — 自带 Git Bash (PortableGit) 装机
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
-- 用户版 86.97 MB,Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
+- 用户版 173 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
 
 ## 二、v1.1.5 — 16 个 BUG 全面修复(2026-07-10)
 
@@ -126,3 +126,66 @@
 - v1.1.3:更新报 404
 - v1.1.4:资产提取 UI 不显示
 - v1.1.5:导入剧本崩溃 + 项目树 CRUD 状态问题 + StoryboardTask cancel 失效 + 创维拉不到更新 + prompt 回滚 + 16 个 BUG 全面修
+- v1.1.5.4:清空分镜 / 清空 prompt / 提取到视频 页面不刷新
+- v1.1.5.5:生提示词报 "无法读取文件:Git Bash 未安装" → 自带 PortableGit 装机
+
+## 七、v1.1.5.1~v1.1.5.4 — 4 个连续小修复
+
+### v1.1.5.1 — hermes 三个智能体打包丢失
+- user 反馈 "软件未安装 skill,三个智能体文件夹都是空的"
+- 根因:`build_x2.py` step 3 只拷 hermes.exe,**漏**拷 profiles。EXE 模式 `Config.hermes_home` 探测第 2 选 `<project_root>/resources/hermes/`,profiles 目录不存在 → hermes 报"skill 未在系统中安装"
+- 修法:加 step 3.5 `shutil.copytree(<source>/resources/hermes/profiles, <dist>/resources/hermes/profiles)`
+
+### v1.1.5.2 — 批量资产生图 SQLite 跨线程
+- 报 `SQLite objects created in a thread can only be used in that same thread`
+- 根因:`BatchAssetImageTask.run()` worker thread 调 `self._db.list_assets`,db connection 在 main thread 创的
+- 修法:`core/migration.py` `open_db` 改 `sqlite3.connect(p, check_same_thread=False)`
+
+### v1.1.5.3 — 升级后用户 API 配置丢失
+- user 反馈"更新后设置过的 api 就没了"
+- 根因:`.iss` 拷 `dist\...\*` 时没 Excludes → build_x2.py step 4 拷的 `config/hermes_api.json` 模板覆盖 user 填的 API key
+- 修法:`Source` 加 `Excludes: "hermes_api.json"`,line 单独 `onlyifdoesntexist` 装模板(只首次安装生效)
+
+### v1.1.5.4 — 清空分镜 / 清空 prompt / 提取到视频 页面不刷新
+- user 反馈"在分镜页点击清空分镜,软件页面并没有清空"
+- 根因:`_show_episode_detail` (line 802) 用 id-only cache,同 ep_id 复用旧 widget 不重建。3 个同类 handler:`_on_clear_storyboard` (line 3110) / `_on_clear_prompt` (line 2915) / `_on_extract_prompt_to_video` (line 3060) 写 db 后调 `_show_*` 没失效 cache
+- 修法:3 处都在调 `_show_*` 之前先 `self._invalidate_all_ui_caches()`
+
+## 八、v1.1.5.5 — 自带 Git Bash (PortableGit) 装机
+
+### 用户反馈触发
+> "我不同意你这样的改法,截断是不明智的选择,我建议你把 Git Bash 装入安装包,更新以后直接给用户的电脑装上,这样是最好的选择"
+
+### 根因
+hermes terminal 工具要 `bash -c 'cat <file>'` 读长分镜/剧本 tmp file(>20000 字符要写 tmp file 让 hermes cat 读)。user 电脑没装 Git Bash + env var HERMES_GIT_BASH_PATH 没设 → hermes 默认 bash 查找失败 → 报 "无法读取文件:Git Bash 未安装"。
+
+### 修法(user 明确要求:装 Git Bash,反对截断)
+1. `build_x2.py` step 0.5 加 `download_mingit()` 函数(实际下 PortableGit-2.54.0-64-bit.7z.exe ~80MB)
+   - 用 `subprocess.run([sfx, f'-o{target}', '-y'])` 7z SFX 自解压,**不**需外部 7z 工具
+   - 跟 hermes install.ps1:794-796 一样的方式
+   - 缓存机制:installer/PortableGit/bin/bash.exe 存在跳过下载
+2. `installer/漫剧助手X-2.iss` 加:
+   - `Source: "...\installer\PortableGit\*"; DestDir: "{app}\PortableGit"` 装 PortableGit 到 `<install_root>\PortableGit\`
+   - `[Registry] Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "HERMES_GIT_BASH_PATH"; ValueData: "{app}\PortableGit\bin\bash.exe"; Flags: uninsdeletevalue` 设 env var
+3. `.gitignore` 加 `installer/PortableGit/` + `installer/MinGit-*.zip`(本地 build 缓存,不入 git)
+4. **撤回 prompts.py 2 处 + generators.py 1 处截断方案** (user 反对截断会 quality 降,保留长文本写 tmp file + 让 hermes cat 读)
+
+### 踩过的坑
+- **build 第一版错下 MinGit**:MinGit 是 minimal-automation 包,**不**含 bash.exe!解出来只有 git + 库。改用 PortableGit(hermes 官方用,自带 bash + git + coreutils)
+- **bash 路径**:PortableGit 实际是 `bin\bash.exe`,**不**是 `cmd\bash.exe`(那是完整 Git 安装包布局)也不是 `mingw64\bin\bash.exe`(那是 MinGit mingw 工具路径)
+- **Inno Setup [Registry] 段不支持 `errorignore` flag**:ISCC 报"Parameter 'Flags' includes an unknown flag"。HKCU 是 user-scope,普通 user 都有写权限,无需 errorignore
+
+### 版本号 3 处一致
+`source/src/main.py` (setApplicationVersion + UpdateChecker.current_version) + `installer/漫剧助手X-2.iss` (`#define MyAppVersion`)
+
+### Installer 大小
+90.24 MB → 173 MB (+~83MB PortableGit, LZMA2 压缩后)
+
+### Git commit
+`d353887 v1.1.5.5 — 自带 Git Bash (PortableGit) 装机,跟老 software 行为一致`
+
+### 发布脚本
+`.publish_v1.1.5.5.py`(等 user 给 `MANJU_X2_PAT` 环境变量)
+
+### 硬约束
+`project_memory.md` 加 v1.1.5.5 自带 Git Bash 装机 + version bump 三处一致 2 条硬约束
