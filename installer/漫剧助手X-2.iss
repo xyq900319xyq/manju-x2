@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.12"
+#define MyAppVersion "1.1.5.13"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -73,7 +73,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; v1.1.5.3【用户数据保护】:Excludes 排除 hermes_api.json,防止 ignoreversion
 ; 覆盖用户填的 API key。line 75 单独用 onlyifdoesntexist 装模板(首次安装时)。
 ; 之前没 Excludes → 升级后用户 API 配置被模板覆盖,API key 全部丢失。
-Source: "D:\漫剧助手\manju-x2\source\dist\漫剧助手X-2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "hermes_api.json"
+Source: "D:\漫剧助手\manju-x2\source\dist\漫剧助手X-2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace; Excludes: "hermes_api.json"
 ; v1.1.5.5【自带 Git Bash 装 hermes 依赖】:PortableGit 64-bit (~50MB) 从
 ; build_x2.py step 0.5 下的 installer/PortableGit/ 拷到 <install_root>\PortableGit\。
 ; 装后 hermes 端能调 `bash -c 'cat <file>'`,跟老 software D:\剧本分镜助手\
@@ -114,8 +114,18 @@ Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\cache"
 
 [Code]
-// v1.0.0 修:NeedRestart() 默认返回 False(无需重启 Inno),
-// 只在旧 EXE 还在跑时直接 taskkill 杀掉再装,不弹确认框
+// v1.1.5.13【根因修复:EXE 锁导致装时跳过覆盖】
+// user 反馈"装好还是 v1.1.4"——根因不是装到不同目录,也不是快捷方式问题。
+// 是 Inno Setup 装时检测到 漫剧助手X-2.exe 被 Windows 锁定(可能 hermes.exe
+// 子进程还在 / Windows Defender 实时扫描 / 360 占用),`[Files]` 段虽然用了
+// `ignoreversion`,但 Inno Setup 默认会**静默跳过被锁文件**,装完后用户启动的
+// 还是老的 v1.1.4 EXE。
+//
+// 修法:
+// 1. `[Files]` 段加 `restartreplace` flag:让 Inno Setup 把被锁的 EXE 改名(.old 后缀),
+//    装完用新 EXE 替换,装完提示 "已替换 1 个被锁文件"
+// 2. `[Code]` 段加 `PrepareToInstall` 在装前主动 taskkill 杀 漫剧助手X-2.exe 和
+//    hermes.exe / python.exe (hermes 子进程),从源头避免文件锁
 function NeedRestart(): Boolean;
 var
   ResultCode: Integer;
@@ -132,6 +142,26 @@ begin
     Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
     Sleep(2000);
   end;
+end;
+
+// v1.1.5.13【装前杀所有可能锁 EXE 的进程】
+// Inno Setup 静默装时 [Files] 段 ignoreversion flag 对被锁 EXE 静默跳过,
+// user 装完启动还是老的 v1.1.4。装前主动 taskkill 杀:
+// 1. 漫剧助手X-2.exe(主程序)
+// 2. hermes.exe(hemes agent 独立进程,可能持有 EXE 文件句柄)
+// 3. python.exe(PyInstaller 启动的 hermes 子进程,如果 hermes 是 Python 写的)
+// 配合 [Files] 段的 restartreplace flag 双保险,确保 EXE 一定能换。
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  Result := '';
+  // 不弹任何 MsgBox,直接静默 taskkill
+  Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
+  Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewNoWait, ResultCode);
+  Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewNoWait, ResultCode);
+  Sleep(1500);
+  NeedsRestart := False;
 end;
 
 // v1.1.5.6【WM_SETTINGCHANGE 广播 - 不实现】:**manju 端核心 fix 是在 spawn hermes 前
