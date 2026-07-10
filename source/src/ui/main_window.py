@@ -517,9 +517,14 @@ class MainWindow(QMainWindow):
         except OSError as e:
             QMessageBox.critical(self, "启动安装器失败", str(e))
             return
-        # 给安装器时间启动(自己 quit 太早 installer 检测不到主程序占用)
-        # v1.1.5.9 延长到 1500ms,确保 installer 已经初始化完
-        QTimer.singleShot(1500, QApplication.quit)
+        # v1.1.5.10【os._exit(0) 强退】:不靠 QApplication.quit() 软退,
+        # 直接 os._exit(0) 杀 Python 进程。Qt quit 只退出 event loop,但 Python
+        # 进程不立刻退出(后台 hermes 线程等),Setup.exe 拿不到 EXE 文件锁。
+        # 配合 .iss NeedRestart() 的静默 taskkill 双保险,确保 Setup.exe
+        # 干净替换 EXE。
+        # 注意:os._exit 跳过所有清理(log flush / QSharedMemory 释放等),
+        # 但"装更新"场景可接受,用户已经点了"立即更新"。
+        QTimer.singleShot(1500, lambda: os._exit(0))
 
     def _on_check_update_manual(self) -> None:
         """用户主动点「检查更新」→ 强制拉取（跳过缓存）+ 有新版直接进一键更新流程。"""
