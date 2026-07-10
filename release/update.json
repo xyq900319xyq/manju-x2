@@ -1,9 +1,9 @@
 {
-  "version": "1.1.5.13",
-  "url": "https://github.com/xyq900319xyq/manju-x2/releases/download/v1.1.5.13/X-2_v1.1.5.13_Setup.exe",
-  "md5": "503b8dc222b0bad6c6fe23c83083aead",
-  "sha256": "0689ee2d5ff7cbc3a8976a13a2dacea2eca08b85c1bf7b13b39de6c7b6d5676f",
-  "size": 173425949,
+  "version": "1.1.5.14",
+  "url": "https://github.com/xyq900319xyq/manju-x2/releases/download/v1.1.5.14/X-2_v1.1.5.14_Setup.exe",
+  "md5": "7a23cb4d66b7843d9ed85fbefd1e7114",
+  "sha256": "7dacbbe026506c49b23f569545ee2111fb1bf5bacdf3fac4cb74d102cc6698ef",
+  "size": 173425867,
   "changelog_url": "https://github.com/xyq900319xyq/manju-x2/releases",
-  "release_date": "2026-07-10"
+  "release_date": "2026-07-11"
 }

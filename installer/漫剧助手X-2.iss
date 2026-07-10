@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.13"
+#define MyAppVersion "1.1.5.14"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -144,13 +144,10 @@ begin
   end;
 end;
 
-// v1.1.5.13【装前杀所有可能锁 EXE 的进程】
+// v1.1.5.14【装前第一道防线 - 杀进程】
 // Inno Setup 静默装时 [Files] 段 ignoreversion flag 对被锁 EXE 静默跳过,
-// user 装完启动还是老的 v1.1.4。装前主动 taskkill 杀:
-// 1. 漫剧助手X-2.exe(主程序)
-// 2. hermes.exe(hemes agent 独立进程,可能持有 EXE 文件句柄)
-// 3. python.exe(PyInstaller 启动的 hermes 子进程,如果 hermes 是 Python 写的)
-// 配合 [Files] 段的 restartreplace flag 双保险,确保 EXE 一定能换。
+// 装前主动 taskkill 杀 hermes.exe / python.exe 子进程,降低文件锁概率。
+// 第二道防线是 CurStepChanged(ssInstall) 整目录删 + 改名。
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   ResultCode: Integer;
@@ -160,8 +157,56 @@ begin
   Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
   Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewNoWait, ResultCode);
   Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewNoWait, ResultCode);
-  Sleep(1500);
+  Exec('taskkill', '/F /IM pythonw.exe', '', SW_HIDE, ewNoWait, ResultCode);
+  Sleep(3000);  // 等 Windows 文件句柄完全释放
   NeedsRestart := False;
+end;
+
+// v1.1.5.14 line 2 - 装前整目录删 _internal/ + launcher EXE
+// user 反馈"装好还是 v1.1.4,EXE 修改时间还是 23:16" = Setup.exe 静默跳过覆盖被锁文件
+// Inno Setup 6.7.3 的 CurStepChanged 是 procedure 不是 function
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+  AppDir: String;
+  ExePath: String;
+  InternalDir: String;
+begin
+  if CurStep = ssInstall then
+  begin
+    AppDir := ExpandConstant('{app}');
+    ExePath := AppDir + '\{#MyAppExeName}';
+    InternalDir := AppDir + '\_internal';
+
+    // 1. 杀光所有可能锁文件的进程
+    Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
+    Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewNoWait, ResultCode);
+    Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewNoWait, ResultCode);
+    Exec('taskkill', '/F /IM pythonw.exe', '', SW_HIDE, ewNoWait, ResultCode);
+    Sleep(3000);
+
+    // 2. 删 launcher EXE(强删 + 改名兜底)
+    if FileExists(ExePath) then
+    begin
+      Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewNoWait, ResultCode);
+      Sleep(1000);
+      if FileExists(ExePath) then
+      begin
+        RenameFile(ExePath, ExePath + '.locked');
+      end;
+    end;
+
+    // 3. 删整个 _internal/ 目录(强删 + 改名兜底)
+    if DirExists(InternalDir) then
+    begin
+      Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewNoWait, ResultCode);
+      Sleep(2000);
+      if DirExists(InternalDir) then
+      begin
+        RenameFile(InternalDir, InternalDir + '.locked');
+      end;
+    end;
+  end;
 end;
 
 // v1.1.5.6【WM_SETTINGCHANGE 广播 - 不实现】:**manju 端核心 fix 是在 spawn hermes 前
