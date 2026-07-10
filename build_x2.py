@@ -13,6 +13,7 @@ import subprocess
 import sys
 import urllib.parse
 from pathlib import Path
+from typing import Tuple
 
 ROOT = Path(r'D:\漫剧助手\manju-x2')
 SOURCE = ROOT / 'source'
@@ -152,7 +153,12 @@ def main():
         run([iscc, str(INSTALLER / '漫剧助手X-2.iss')], cwd=INSTALLER)
         # 算 md5 + sha256
         import hashlib
-        for f in RELEASE.glob('漫剧助手X-2_v*_Setup.exe'):
+        # v1.1.4:glob pattern 兼容老 "漫剧助手X-2_v*_Setup.exe" + 新
+        # "X-2_v*_Setup.exe"(v1.1.3.1 起 .iss 改纯 ASCII 文件名)
+        setup_exes = sorted(
+            set(RELEASE.glob('漫剧助手X-2_v*_Setup.exe')) | set(RELEASE.glob('X-2_v*_Setup.exe'))
+        )
+        for f in setup_exes:
             data = f.read_bytes()
             md5 = hashlib.md5(data).hexdigest()
             sha256 = hashlib.sha256(data).hexdigest()
@@ -166,7 +172,17 @@ def main():
     import datetime
     import json
     import re
-    setup_files = sorted(RELEASE.glob('漫剧助手X-2_v*_Setup.exe'))
+    # v1.1.4:兼容老 "漫剧助手X-2_v*_Setup.exe" + 新 "X-2_v*_Setup.exe"
+    setup_exes = sorted(
+        set(RELEASE.glob('漫剧助手X-2_v*_Setup.exe')) | set(RELEASE.glob('X-2_v*_Setup.exe'))
+    )
+    # v1.1.4:按 semver 排序(字符串排序"X" < "漫" 错位 → 取错 latest)
+    def _ver_key(p: Path) -> Tuple[int, ...]:
+        m = re.search(r'_v(\d+(?:\.\d+){0,3})_Setup', p.name)
+        if m:
+            return tuple(int(x) for x in m.group(1).split('.'))
+        return (0,)
+    setup_files = sorted(setup_exes, key=_ver_key)
     if setup_files:
         latest = setup_files[-1]
         m = re.search(r'_v(.+?)_Setup', latest.name)

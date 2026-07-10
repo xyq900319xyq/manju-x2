@@ -523,7 +523,7 @@ class MainWindow(QMainWindow):
         log.info("用户主动检查更新")
         # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.1.3"
+        info.current_version = "1.1.4"
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
         # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)
@@ -3483,7 +3483,15 @@ class MainWindow(QMainWindow):
         v0.7.8.12【同步落盘】_storyboard_file_path/_prompt_file_path
         依赖磁盘上的 .md 文件存在（"打开文件"按钮），但历史上只写 db 没
         落盘 → 报"分镜文件尚未生成"。现在 update_episode 后立即落盘。
+
+        v1.1.4【统一 UI 缓存失效】任何 task 完成都可能改 ep / project / asset 字段。
+        之前 v1.1.2 只对 StoryboardTask / VideoPromptTask 单独 invalidate
+        _episode_detail_cache,资产提取 / 资产生图 / 批量生图完成后 UI
+        仍不刷(因为 _asset_tab_cache 也是 id-only 命中走 early return,
+        即使 db 写好 panel 也不显示新内容)。统一在入口处 invalidate 所有
+        UI cache,下面各 task 分支再单独按需刷当前 tab 即可。
         """
+        self._invalidate_all_ui_caches()
         if isinstance(task, StoryboardTask):
             ep_id = task._episode.id
             ep_fresh = self.db.get_episode(ep_id)
@@ -3646,6 +3654,28 @@ class MainWindow(QMainWindow):
                     f"  ⏭ 跳过 {r.skipped}（已有图）"
                     + fail_text,
                 )
+
+    def _invalidate_all_ui_caches(self) -> None:
+        """v1.1.4【统一 UI 缓存失效】清空所有 tab widget 缓存,下次切 tab
+        触发 _show_*_tab 重建 / refresh。
+
+        之前 v1.1.2 只在 StoryboardTask / VideoPromptTask 分支手工
+        invalidate _episode_detail_cache,其他 task(AssetExtract /
+        AssetImage / BatchAssetImage / 未来新增 task)完成后
+        _asset_tab_cache 等 id-only cache 仍命中,UI 永远显示旧内容。
+        现在统一在 _persist_task_result 入口调一次,任何 task 完成都会
+        失效所有 tab 缓存,各 task 分支再按需 _show_*_tab 主动刷一次。
+
+        性能:cache 失效 → 下次切 tab 走 cache miss 路径重建 widget。
+        对于分镜/视频 tab(700+ widget)会有 ~200-800ms 卡顿,这是可
+        接受的代价(用户刚点了"生成"按钮,期望看到结果,卡 0.5s OK)。
+        对于资产 tab(纯 list 重建,16+ 资产 × 6 widget),重建很快。
+        """
+        self._episode_detail_cache = None
+        self._prompt_tab_cache = None
+        self._video_tab_cache = None
+        self._asset_tab_cache = None
+        self._project_overview_cache = None
 
     @Slot()
     def _on_open_log(self) -> None:

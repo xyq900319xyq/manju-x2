@@ -109,11 +109,21 @@ def parse_asset_markdown(output: str) -> List[Tuple[str, str, str, str]]:
 
     # 先按 ## section 切分
     # sections: { '人物资产': '人物1：xxx\n- ...\n\n人物2：yyy\n...', ... }
+    # v1.1.4:段标题正则兼容新版 hermes 输出格式
+    #   - 旧:`## 人物资产` / `## 场景资产` / `## 物品资产`
+    #   - 新(带中文序号):`# 一、人物资产` / `## 一、人物资产` / `# 二、场景资产` / `# 三、物品资产`
+    #   - 新(带数字序号):`## 1. 人物资产` / `## 2. 场景资产`
+    # 兼容 # ~ #### 任意级标题 + 可选 序号/顿号/句号/空格 + 三种资产段名
+    _SECTION_RE = re.compile(
+        r"^#{1,4}\s*"
+        r"(?:(?:[\d]+|[一二三四五六七八九十]+)\s*[、.\s]\s*)?"
+        r"(人物资产|场景资产|物品资产)\s*$"
+    )
     sections: Dict[str, str] = {}
     current_key: Optional[str] = None
     current_buf: List[str] = []
     for line in text.splitlines():
-        m = re.match(r"^##\s*(人物资产|场景资产|物品资产)\s*$", line.strip())
+        m = _SECTION_RE.match(line.strip())
         if m:
             if current_key is not None:
                 sections[current_key] = "\n".join(current_buf).strip()
@@ -126,6 +136,8 @@ def parse_asset_markdown(output: str) -> List[Tuple[str, str, str, str]]:
         sections[current_key] = "\n".join(current_buf).strip()
 
     # 每个 section 内：按 ### 条目切
+    # v1.1.4:空 desc 也保留(之前 `if desc:` 会把"只有名字没描述"的资产
+    # 漏掉,新版 hermes 输出 `### 物品4：xxx` 后直接换下一条,desc 空就被丢)
     result: List[Tuple[str, str, str, str]] = []
     for section_title, content in sections.items():
         kind = _SECTION_KIND.get(section_title)
@@ -141,10 +153,8 @@ def parse_asset_markdown(output: str) -> List[Tuple[str, str, str, str]]:
             if m:
                 if current_name is not None:
                     desc = "\n".join(current_lines).strip()
-                    if desc:
-                        # v0.7.0：从 desc 抽取"中文指令词"段作为 image_prompt
-                        img_prompt = _extract_image_prompt(desc)
-                        result.append((kind, current_name, desc, img_prompt))
+                    img_prompt = _extract_image_prompt(desc) if desc else ""
+                    result.append((kind, current_name, desc, img_prompt))
                 current_name = m.group(2).strip()
                 current_lines = []
             else:
@@ -152,9 +162,8 @@ def parse_asset_markdown(output: str) -> List[Tuple[str, str, str, str]]:
                     current_lines.append(line)
         if current_name is not None:
             desc = "\n".join(current_lines).strip()
-            if desc:
-                img_prompt = _extract_image_prompt(desc)
-                result.append((kind, current_name, desc, img_prompt))
+            img_prompt = _extract_image_prompt(desc) if desc else ""
+            result.append((kind, current_name, desc, img_prompt))
     log.info("parsed %d assets from markdown (len=%d)", len(result), len(text))
     return result
 
