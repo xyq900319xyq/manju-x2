@@ -225,7 +225,15 @@ def open_db(root: Path) -> sqlite3.Connection:
     p = ensure_data_dir(root)
     if not p.exists() or p.stat().st_size == 0:
         run_first_migration(root)
-    con = sqlite3.connect(p)
+    # v1.1.5.2:check_same_thread=False 让 SQLite connection 跨线程用。
+    # 之前默认 check_same_thread=True,导致 BatchAssetImageTask.run() 在
+    # task queue worker thread 调 self._db.list_assets/update_asset_image 等
+    # 报 "SQLite objects created in a thread can only be used in that same
+    # thread. The object was created in thread id 14720 and this is thread id
+    # 14960." SQLite 内部有 mutex 保护并发安全,task queue 串行跑无 race。
+    # 其他 5 类 task(StoryboardTask / VideoPromptTask / AssetExtractTask /
+    # AssetImageTask / VideoTask)通过 hermes 处理不直接读 db 不受影响。
+    con = sqlite3.connect(p, check_same_thread=False)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
     # 升级 schema（如有需要）
