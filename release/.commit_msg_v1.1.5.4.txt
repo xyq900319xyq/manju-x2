@@ -1,0 +1,22 @@
+v1.1.5.4 — 3 个"写 db 后 UI 不刷新"BUG 修复
+
+user 反馈"清空分镜页面没清空":`_on_clear_storyboard` 写 db `ep.storyboard=""`
+后调 `_show_episode_detail` 但没 invalidate cache。`_show_episode_detail` 用
+id-only cache (line 802),同 ep_id 直接复用旧 widget → 旧分镜文本仍在显示。
+
+按 v1.1.5 修法"同名 BUG 一次都修好",3 处一起修:
+- line 3110 `_on_clear_storyboard` (user 反馈)
+- line 2915 `_on_clear_prompt` (同类预防)
+- line 3060 `_on_extract_prompt_to_video` (同类预防)
+
+3 处都加 `self._invalidate_all_ui_caches()` 强制重建 widget。
+(line 2152 / 2359 `_show_video_tab` cache key 含 hash(video_segments),
+字段变化自动失效,不动)
+
+文件改动:
+- ui/main_window.py: 3 处加 _invalidate_all_ui_caches() (+12 行注释)
+- source/src/main.py: 版本号 1.1.5.3 → 1.1.5.4 (2 处)
+- installer/漫剧助手X-2.iss: MyAppVersion 1.1.5.3 → 1.1.5.4
+- docs/更新日志.md: +v1.1.5.4 段
+- release/update.json: v1.1.5.3 → v1.1.5.4
+- release/X-2_v1.1.5.4_Setup.exe.{md5,sha256}: 校验和

@@ -2909,6 +2909,10 @@ class MainWindow(QMainWindow):
             except OSError as e:
                 log.warning("删除 prompt 文件失败: %s", e)
         # 刷新 UI
+        # v1.1.5.4【清空 prompt UI 刷新 bug 修复】:v1.1.4 之前 _show_prompt_tab 用 id-only cache,
+        # 同 ep_id 直接复用旧 widget → 旧 prompt 文本仍在显示。修法:invalidate
+        # 所有 cache 强制重建(对应 _on_clear_storyboard line 3100 同类修法)。
+        self._invalidate_all_ui_caches()
         ep_fresh = self.db.get_episode(ep.id)
         if ep_fresh and self._current_project:
             self._current_episode = ep_fresh
@@ -3050,6 +3054,10 @@ class MainWindow(QMainWindow):
             self.status_msg.setText("⚠ 提取失败:prompt 里没有 🎞️ Segment 标记")
             return
         # 刷新视频 tab(用最新 ep)
+        # v1.1.5.4【提取到视频 UI 刷新 bug 修复】:v1.1.4 之前 _show_video_tab
+        # 用 id+hash cache 命中 → 复用旧 widget,新提取的 video_segments 不显示。
+        # 修法:invalidate 所有 cache 强制重建。
+        self._invalidate_all_ui_caches()
         ep_fresh = self.db.get_episode(ep.id)
         if ep_fresh and self._current_project:
             self._current_episode = ep_fresh
@@ -3094,6 +3102,12 @@ class MainWindow(QMainWindow):
             except OSError as e:
                 log.warning("删除分镜文件失败: %s", e)
         # 刷新 UI
+        # v1.1.5.4【清空分镜 UI 刷新 bug 修复】(user 反馈):v1.1.4 之前
+        # _show_episode_detail 用 id-only cache,同 ep_id 直接复用旧 widget
+        # (line 802 early return)→ 旧分镜文本仍在显示,db 已经清了 UI 没变。
+        # 修法:invalidate 所有 cache 强制重建(对应 _on_clear_prompt line 2914
+        # / _on_extract_prompt_to_video line 3056 同类修法)。
+        self._invalidate_all_ui_caches()
         ep_fresh = self.db.get_episode(ep.id)
         if ep_fresh and self._current_project:
             self._current_episode = ep_fresh
