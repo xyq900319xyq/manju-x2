@@ -504,18 +504,22 @@ class MainWindow(QMainWindow):
             return
         try:
             # Inno Setup 6.x 静默装参数: /VERYSILENT /SUPPRESSMSGBOXES /SP- /NORESTART
-            # /CLOSEAPPLICATIONS 让安装器自动关掉 manju-x2.exe
+            # /FORCECLOSEAPPLICATIONS (v1.1.5.9) 强制关闭 manju-x2.exe 不弹确认框
+            # 之前用 /CLOSEAPPLICATIONS 会弹"是否关闭应用"确认框,经常被用户忽略
+            # 或藏在后台,导致 installer 卡住或取消 → EXE 没换 → 用户看到的还是老版本
+            # 配合 .iss [Setup] 段 CloseApplications=yes + CloseApplicationsFilter=... 生效
             subprocess.Popen(
                 [setup_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-",
-                 "/CLOSEAPPLICATIONS", "/NORESTART"],
+                 "/FORCECLOSEAPPLICATIONS", "/NORESTART"],
                 close_fds=True,
             )
             log.info("已启动 Setup.exe 静默装: %s", setup_path)
         except OSError as e:
             QMessageBox.critical(self, "启动安装器失败", str(e))
             return
-        # 给安装器一点时间启动再关自己(避免安装器还没起就被关)
-        QTimer.singleShot(500, QApplication.quit)
+        # 给安装器时间启动(自己 quit 太早 installer 检测不到主程序占用)
+        # v1.1.5.9 延长到 1500ms,确保 installer 已经初始化完
+        QTimer.singleShot(1500, QApplication.quit)
 
     def _on_check_update_manual(self) -> None:
         """用户主动点「检查更新」→ 强制拉取（跳过缓存）+ 有新版直接进一键更新流程。"""
