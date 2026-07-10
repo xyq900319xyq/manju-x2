@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.2"
+#define MyAppVersion "1.1.5.3"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -70,8 +70,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; PyInstaller onedir 产物 (dist\漫剧助手X-2\*,已包含 hermes\ 子目录)
-Source: "D:\漫剧助手\manju-x2\source\dist\漫剧助手X-2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; 用户版 hermes_api.json 模板(若 dist 里没带,装一份)
+; v1.1.5.3【用户数据保护】:Excludes 排除 hermes_api.json,防止 ignoreversion
+; 覆盖用户填的 API key。line 75 单独用 onlyifdoesntexist 装模板(首次安装时)。
+; 之前没 Excludes → 升级后用户 API 配置被模板覆盖,API key 全部丢失。
+Source: "D:\漫剧助手\manju-x2\source\dist\漫剧助手X-2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "hermes_api.json"
+; 用户版 hermes_api.json 模板(只装一次,保留用户填的 API key)
 Source: "D:\漫剧助手\manju-x2\source\config\hermes_api.json"; DestDir: "{app}\config"; Flags: onlyifdoesntexist
 ; 文档
 Source: "D:\漫剧助手\manju-x2\docs\README.md"; DestDir: "{app}\docs"; Flags: ignoreversion

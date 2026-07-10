@@ -1,0 +1,25 @@
+v1.1.5.3 — 升级后用户 API 配置不再丢失
+
+`installer/漫剧助手X-2.iss` line 73 之前用
+`Source: "...\dist\...\*"; Flags: ignoreversion recursesubdirs createallsubdirs`,
+`ignoreversion` 默认覆盖 `<install_root>\config\hermes_api.json`(用户填的
+API key)。`build_x2.py` step 4 把 hermes_api.json 模板拷到
+`dist\.../config/hermes_api.json`,line 73 整体拷 dist/* → 覆盖 user 配置。
+
+修法:line 73 加 `Excludes: "hermes_api.json"`,line 75 `onlyifdoesntexist`
+首次安装生效(用户升级时跳过,保留用户填的 API key)。
+
+`data/` `outputs/` `logs/` 用户数据不会被覆盖:`build_x2.py` step 4 只创建
+空目录 + `.gitkeep` 占位文件,Inno Setup `ignoreversion` 覆盖不会动用户数据。
+v1.1.5.1 `data/manju.db` 等也不会被丢。
+
+⚠️ 之前 v1.1.5.2 升级时已经丢的 API key 无法恢复,需要重新填一次。
+v1.1.5.3 修的是未来升级不再丢。
+
+文件改动:
+- installer/漫剧助手X-2.iss: line 73 加 Excludes: "hermes_api.json"
+- source/src/main.py: 版本号 1.1.5.2 → 1.1.5.3 (2 处)
+- installer/漫剧助手X-2.iss: MyAppVersion 1.1.5.2 → 1.1.5.3
+- docs/更新日志.md: +v1.1.5.3 段
+- release/update.json: v1.1.5.2 → v1.1.5.3
+- release/X-2_v1.1.5.3_Setup.exe.{md5,sha256}: 校验和
