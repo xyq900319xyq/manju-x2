@@ -2,7 +2,7 @@
 
 ## 一、当前版本
 
-- v1.1.5.14 (2026-07-11) — 装前整目录删 _internal/(彻底解决 v1.1.5.13 失败)
+- v1.1.5.15 (2026-07-11) — Exec 改 ewWaitUntilTerminated 同步等(彻底修 v1.1.5.14 失败)
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
 - 用户版 173 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
