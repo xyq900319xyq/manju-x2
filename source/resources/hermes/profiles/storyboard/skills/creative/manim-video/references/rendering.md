@@ -1,4 +1,4 @@
-﻿# Rendering Reference
+# Rendering Reference
 
 ## Prerequisites
 

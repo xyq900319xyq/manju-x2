@@ -11,7 +11,6 @@ agent:
   gateway_timeout: 1800
   gateway_timeout_warning: 900
   image_input_mode: auto
-  max_tokens: 32000
   max_turns: 90
   parallel_tool_call_guidance: true
   personalities:
@@ -57,6 +56,7 @@ agent:
   task_completion_guidance: true
   tool_use_enforcement: auto
   verbose: false
+  max_tokens: 48000
 approvals:
   cron_mode: deny
   destructive_slash_confirm: true
@@ -207,17 +207,17 @@ code_execution:
   mode: project
   timeout: 300
 command_allowlist:
-- script execution via heredoc
-- overwrite project env/config file
-- recursive delete
-- disk copy
-- pipe remote content to shell
-- execute_code
-- shell command via -c/-lc flag
-- script execution via -e/-c flag
-- stop/restart hermes gateway (kills running agents)
-- overwrite system file via redirection
-- delete in root path
+  - script execution via heredoc
+  - overwrite project env/config file
+  - recursive delete
+  - disk copy
+  - pipe remote content to shell
+  - execute_code
+  - shell command via -c/-lc flag
+  - script execution via -e/-c flag
+  - stop/restart hermes gateway (kills running agents)
+  - overwrite system file via redirection
+  - delete in root path
 compression:
   abort_on_summary_failure: false
   codex_gpt55_autoraise: true
@@ -251,27 +251,6 @@ curator:
   min_idle_hours: 2
   prune_builtins: true
   stale_after_days: 30
-custom_providers:
-- api_key: ""
-  api_mode: chat_completions
-  base_url: https://api.deepseek.com/v1
-  model: deepseek-v4-pro
-  name: deepseek
-- api_key: ""
-  api_mode: chat_completions
-  base_url: https://apihub.agnes-ai.com/v1
-  model: agnes-2.0-flash
-  name: agnes
-- api_key: ""
-  api_mode: chat_completions
-  base_url: https://chuangwei.cyou/v1
-  model: gemini-3.1-pro-preview
-  name: 创维
-- api_key: ""
-  api_mode: chat_completions
-  base_url: https://apihub.agnes-ai.com/v1
-  model: agnes-2.0-flash
-  name: Agnes AI Flash
 dashboard:
   basic_auth:
     password: ''
@@ -317,11 +296,11 @@ discord:
   voice_fx:
     ack_enabled: true
     ack_phrases:
-    - Let me look into that.
-    - One moment.
-    - Checking on that now.
-    - Give me a sec.
-    - On it.
+      - Let me look into that.
+      - One moment.
+      - Checking on that now.
+      - Give me a sec.
+      - On it.
     ambient_enabled: true
     ambient_gain: 0.18
     ambient_path: ''
@@ -363,9 +342,9 @@ display:
   runtime_footer:
     enabled: false
     fields:
-    - model
-    - context_pct
-    - cwd
+      - model
+      - context_pct
+      - cwd
   show_cost: true
   show_reasoning: false
   skin: default
@@ -446,12 +425,6 @@ memory:
   user_char_limit: 1375
   user_profile_enabled: true
   write_approval: false
-model:
-  api_key: ""
-  base_url: https://api.deepseek.com/v1
-  default: deepseek-v4-pro
-  provider: custom
-  provider_key: deepseek
 model_catalog:
   enabled: true
   providers: {}
@@ -475,27 +448,27 @@ personalities: {}
 platform_hints: {}
 platform_toolsets:
   cli:
-  - hermes-cli
+    - hermes-cli
   discord:
-  - hermes-discord
+    - hermes-discord
   google_chat:
-  - hermes-google_chat
+    - hermes-google_chat
   homeassistant:
-  - hermes-homeassistant
+    - hermes-homeassistant
   qqbot:
-  - hermes-qqbot
+    - hermes-qqbot
   signal:
-  - hermes-signal
+    - hermes-signal
   slack:
-  - hermes-slack
+    - hermes-slack
   teams:
-  - hermes-teams
+    - hermes-teams
   telegram:
-  - hermes-telegram
+    - hermes-telegram
   whatsapp:
-  - hermes-whatsapp
+    - hermes-whatsapp
   yuanbao:
-  - hermes-yuanbao
+    - hermes-yuanbao
 platforms:
   api_server:
     port: 8643
@@ -504,20 +477,6 @@ privacy:
   redact_pii: false
 prompt_caching:
   cache_ttl: 5m
-provider: custom:deepseek
-providers:
-  Agnes AI Flash:
-    api_key: ""
-    base_url: https://apihub.agnes-ai.com/v1
-    name: Agnes AI Flash
-  deepseek:
-    api_key: ""
-    base_url: https://api.deepseek.com/v1
-    name: DeepSeek V4
-  创维:
-    api_key: ""
-    base_url: https://chuangwei.cyou/v1
-    name: 创维
 quick_commands: {}
 secrets:
   bitwarden:
@@ -641,7 +600,7 @@ tools:
     search_default_limit: 5
     threshold_pct: 10
 toolsets:
-- hermes-cli
+  - hermes-cli
 tts:
   edge:
     voice: en-US-AriaNeural
@@ -692,3 +651,19 @@ x_search:
   model: grok-4.20-reasoning
   retries: 2
   timeout_seconds: 180
+custom_providers:
+  - name: deepseek
+    api_key: sk-5e6...b223
+    base_url: https://api.deepseek.com/v1
+    api_mode: chat_completions
+    model: deepseek-v4-pro
+  - name: agnes
+    api_key: sk-c3D...TKoE
+    base_url: https://apihub.agnes-ai.com/v1
+    api_mode: chat_completions
+    model: agnes-2.0-flash
+provider: custom:agnes
+model:
+  default: deepseek-v4-pro
+  provider: deepseek
+  base_url: https://api.deepseek.com/v1

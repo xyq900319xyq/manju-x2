@@ -1,4 +1,4 @@
-﻿# fantasy-animation
+# fantasy-animation
 
 Whimsical hand-drawn animation style inspired by Ghibli/Disney
 

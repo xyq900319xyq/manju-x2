@@ -1,4 +1,4 @@
-﻿# Example Workflows
+# Example Workflows
 
 These are starter API-format workflows for the most common tasks. They're
 ready to run with `scripts/run_workflow.py` once you've installed (or have

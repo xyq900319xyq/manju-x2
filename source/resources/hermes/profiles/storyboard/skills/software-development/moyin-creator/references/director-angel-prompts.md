@@ -1,4 +1,4 @@
-﻿# Director Angel vs buildGroupPrompt — Two Completely Different Prompts
+# Director Angel vs buildGroupPrompt — Two Completely Different Prompts
 
 The prompt that `buildGroupPrompt` (in `sclass-prompt-builder.ts`) assembles is NOT what gets sent to the API. The actual video submission goes through **Director Angel**, which wraps the base prompt in a much richer structure.
 

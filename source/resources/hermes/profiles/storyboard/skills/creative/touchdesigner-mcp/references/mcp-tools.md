@@ -1,4 +1,4 @@
-﻿# twozero MCP Tools Reference
+# twozero MCP Tools Reference
 
 36 tools from twozero MCP v2.774+ (April 2026).
 All tools accept an optional `target_instance` param for multi-TD-instance scenarios.

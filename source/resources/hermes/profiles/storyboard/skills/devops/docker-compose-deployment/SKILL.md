@@ -1,4 +1,4 @@
-﻿---
+---
 name: docker-compose-deployment
 description: Deploy Docker Compose applications on Windows hosts with resource constraints — disk space, WSL, registry mirrors, and service debugging.
 ---

@@ -1,4 +1,4 @@
-﻿# neon
+# neon
 
 Vibrant neon colors on dark backgrounds
 

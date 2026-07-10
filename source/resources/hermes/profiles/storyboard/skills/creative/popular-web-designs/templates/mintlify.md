@@ -1,4 +1,4 @@
-﻿# Design System: Mintlify
+# Design System: Mintlify
 
 
 > **Hermes Agent — Implementation Notes**

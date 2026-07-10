@@ -1,4 +1,4 @@
-﻿# p5.js Skill
+# p5.js Skill
 
 Production pipeline for interactive and generative visual art using [p5.js](https://p5js.org/).
 

@@ -1,4 +1,4 @@
-﻿# Moyin Creator — Key Code Locations in Minified JS
+# Moyin Creator — Key Code Locations in Minified JS
 
 Reference map for the compiled `index-XXXXX.js` inside `app.asar`.
 Line numbers shift between builds — use surrounding context strings to re-locate.

@@ -1,4 +1,4 @@
-﻿---
+---
 name: test-driven-development
 description: "TDD: enforce RED-GREEN-REFACTOR, tests before code."
 version: 1.1.0

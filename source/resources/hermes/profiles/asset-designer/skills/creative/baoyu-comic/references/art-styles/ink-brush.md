@@ -1,4 +1,4 @@
-﻿# ink-brush
+# ink-brush
 
 水墨画风 - Chinese ink brush aesthetics with dynamic strokes
 

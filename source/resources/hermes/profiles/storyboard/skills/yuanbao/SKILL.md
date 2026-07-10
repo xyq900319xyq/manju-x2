@@ -1,4 +1,4 @@
-﻿---
+---
 name: yuanbao
 description: "Yuanbao (元宝) groups: @mention users, query info/members."
 version: 1.0.0

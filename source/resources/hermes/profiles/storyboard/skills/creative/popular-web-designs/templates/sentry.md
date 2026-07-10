@@ -1,4 +1,4 @@
-﻿# Design System: Sentry
+# Design System: Sentry
 
 
 > **Hermes Agent — Implementation Notes**

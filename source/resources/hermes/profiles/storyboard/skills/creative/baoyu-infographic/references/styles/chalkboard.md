@@ -1,4 +1,4 @@
-﻿# chalkboard
+# chalkboard
 
 Black chalkboard background with colorful chalk drawing style
 

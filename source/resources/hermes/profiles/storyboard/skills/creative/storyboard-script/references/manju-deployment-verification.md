@@ -1,4 +1,4 @@
-﻿# 漫剧助手部署验证 — storyboard-script 技能
+# 漫剧助手部署验证 — storyboard-script 技能
 
 ## 背景
 

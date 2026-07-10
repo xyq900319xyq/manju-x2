@@ -1,4 +1,4 @@
-﻿# Binary Atom Patching for MOV/MP4
+# Binary Atom Patching for MOV/MP4
 
 Used when ffmpeg remux is too destructive (changes timebase, strips udta, rewrites stbl). This surgically removes or neutralizes a single problematic atom while leaving every other byte untouched.
 

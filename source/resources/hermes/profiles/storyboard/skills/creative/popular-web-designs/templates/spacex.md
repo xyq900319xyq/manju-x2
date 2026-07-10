@@ -1,4 +1,4 @@
-﻿# Design System: SpaceX
+# Design System: SpaceX
 
 
 > **Hermes Agent — Implementation Notes**

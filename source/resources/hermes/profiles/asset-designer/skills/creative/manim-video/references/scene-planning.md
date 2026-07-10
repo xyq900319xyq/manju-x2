@@ -1,4 +1,4 @@
-﻿# Scene Planning Reference
+# Scene Planning Reference
 
 ## Narrative Arc Structures
 

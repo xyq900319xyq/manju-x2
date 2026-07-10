@@ -1,4 +1,4 @@
-﻿# Design System: Vercel
+# Design System: Vercel
 
 
 > **Hermes Agent — Implementation Notes**

@@ -1,4 +1,4 @@
-﻿# manga
+# manga
 
 日漫画风 - Anime/manga aesthetics with expressive characters
 

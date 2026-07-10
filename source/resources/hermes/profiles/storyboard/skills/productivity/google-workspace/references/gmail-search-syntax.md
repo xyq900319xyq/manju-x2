@@ -1,4 +1,4 @@
-﻿# Gmail Search Syntax
+# Gmail Search Syntax
 
 Standard Gmail search operators work in the `query` argument.
 

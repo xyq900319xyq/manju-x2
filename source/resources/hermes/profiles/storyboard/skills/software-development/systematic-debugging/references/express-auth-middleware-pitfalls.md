@@ -1,4 +1,4 @@
-﻿# Express Authentication Middleware Pitfalls
+# Express Authentication Middleware Pitfalls
 
 ## Static File Routes Blocked by Auth Middleware
 

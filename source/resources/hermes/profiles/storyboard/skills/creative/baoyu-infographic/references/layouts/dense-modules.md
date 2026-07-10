@@ -1,4 +1,4 @@
-﻿# dense-modules
+# dense-modules
 
 High-density modular layout with 6-7 typed information modules packed with concrete data.
 

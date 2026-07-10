@@ -1,4 +1,4 @@
-﻿# Color Systems
+# Color Systems
 
 ## Color Modes
 

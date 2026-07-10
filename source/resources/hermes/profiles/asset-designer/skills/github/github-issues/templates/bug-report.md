@@ -1,4 +1,4 @@
-﻿## Bug Description
+## Bug Description
 
 <!-- Clear, concise description of the bug -->
 

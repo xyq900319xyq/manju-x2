@@ -1,4 +1,4 @@
-﻿# aged-academia
+# aged-academia
 
 Historical scientific illustration with aged paper aesthetic.
 

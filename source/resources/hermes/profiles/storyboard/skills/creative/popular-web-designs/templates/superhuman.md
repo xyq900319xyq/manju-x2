@@ -1,4 +1,4 @@
-﻿# Design System: Superhuman
+# Design System: Superhuman
 
 
 > **Hermes Agent — Implementation Notes**

@@ -1,4 +1,4 @@
-﻿# Design System: HashiCorp
+# Design System: HashiCorp
 
 
 > **Hermes Agent — Implementation Notes**

@@ -1,4 +1,4 @@
-﻿# Design System: xAI
+# Design System: xAI
 
 
 > **Hermes Agent — Implementation Notes**

@@ -1,4 +1,4 @@
-﻿# Design System: Mistral AI
+# Design System: Mistral AI
 
 
 > **Hermes Agent — Implementation Notes**

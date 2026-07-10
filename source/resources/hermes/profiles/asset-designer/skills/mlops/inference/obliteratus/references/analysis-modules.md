@@ -1,4 +1,4 @@
-﻿# OBLITERATUS Analysis Modules — Reference
+# OBLITERATUS Analysis Modules — Reference
 
 OBLITERATUS includes 28 analysis modules for mechanistic interpretability of refusal in LLMs.
 These modules help understand how and where refusal behaviors are encoded before performing abliteration.

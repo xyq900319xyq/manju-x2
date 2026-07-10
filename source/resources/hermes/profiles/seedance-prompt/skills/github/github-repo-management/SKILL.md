@@ -1,4 +1,4 @@
-﻿---
+---
 name: github-repo-management
 description: "Clone/create/fork repos; manage remotes, releases."
 version: 1.1.0

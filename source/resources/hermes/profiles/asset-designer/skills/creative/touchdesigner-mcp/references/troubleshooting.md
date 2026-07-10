@@ -1,4 +1,4 @@
-﻿# TouchDesigner Troubleshooting (twozero MCP)
+# TouchDesigner Troubleshooting (twozero MCP)
 
 > See `references/pitfalls.md` for the comprehensive lessons-learned list.
 

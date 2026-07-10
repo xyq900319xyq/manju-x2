@@ -1,4 +1,4 @@
-﻿# Port Notes — baoyu-article-illustrator
+# Port Notes — baoyu-article-illustrator
 
 Ported from [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) v1.57.0.
 

@@ -1,4 +1,4 @@
-﻿# Design System: Airtable
+# Design System: Airtable
 
 
 > **Hermes Agent — Implementation Notes**

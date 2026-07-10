@@ -1,4 +1,4 @@
-﻿# Himalaya Configuration Reference
+# Himalaya Configuration Reference
 
 Configuration file location: `~/.config/himalaya/config.toml`
 

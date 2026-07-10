@@ -1,4 +1,4 @@
-﻿---
+---
 name: codex
 description: "Delegate coding to OpenAI Codex CLI (features, PRs)."
 version: 1.0.0

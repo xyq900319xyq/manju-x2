@@ -1,4 +1,4 @@
-﻿# Design System: Composio
+# Design System: Composio
 
 
 > **Hermes Agent — Implementation Notes**

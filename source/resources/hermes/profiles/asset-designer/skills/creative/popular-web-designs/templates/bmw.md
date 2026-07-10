@@ -1,4 +1,4 @@
-﻿# Design System: BMW
+# Design System: BMW
 
 
 > **Hermes Agent — Implementation Notes**

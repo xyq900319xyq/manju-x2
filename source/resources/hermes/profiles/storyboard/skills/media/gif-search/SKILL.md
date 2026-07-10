@@ -1,4 +1,4 @@
-﻿---
+---
 name: gif-search
 description: "Search/download GIFs from Tenor via curl + jq."
 version: 1.1.0

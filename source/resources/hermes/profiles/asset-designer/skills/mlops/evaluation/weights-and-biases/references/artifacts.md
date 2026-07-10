@@ -1,4 +1,4 @@
-﻿# Artifacts & Model Registry Guide
+# Artifacts & Model Registry Guide
 
 Complete guide to data versioning and model management with W&B Artifacts.
 

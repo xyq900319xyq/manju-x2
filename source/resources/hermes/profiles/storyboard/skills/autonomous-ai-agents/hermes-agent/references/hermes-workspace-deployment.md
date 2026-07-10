@@ -1,4 +1,4 @@
-﻿# Hermes Workspace Deployment
+# Hermes Workspace Deployment
 
 Hermes Workspace (https://github.com/outsourc-e/hermes-workspace) 是 Hermes Agent 的 Web 前端界面，基于 Vite + React + TanStack Start 构建。通过 HTTP API 与 Hermes Agent Gateway 通信。
 

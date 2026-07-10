@@ -1,4 +1,4 @@
-﻿# Design System: Apple
+# Design System: Apple
 
 
 > **Hermes Agent — Implementation Notes**

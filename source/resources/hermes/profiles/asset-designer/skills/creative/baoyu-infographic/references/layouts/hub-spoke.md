@@ -1,4 +1,4 @@
-﻿# hub-spoke
+# hub-spoke
 
 Central concept with radiating connections to related items.
 

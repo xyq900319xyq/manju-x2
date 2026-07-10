@@ -1,4 +1,4 @@
-﻿---
+---
 name: hermes-agent-skill-authoring
 description: "Author in-repo SKILL.md: frontmatter, validator, structure, and writing-quality principles."
 version: 1.1.0

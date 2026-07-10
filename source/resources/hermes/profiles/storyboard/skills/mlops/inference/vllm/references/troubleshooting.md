@@ -1,4 +1,4 @@
-﻿# Troubleshooting Guide
+# Troubleshooting Guide
 
 ## Contents
 - Out of memory (OOM) errors

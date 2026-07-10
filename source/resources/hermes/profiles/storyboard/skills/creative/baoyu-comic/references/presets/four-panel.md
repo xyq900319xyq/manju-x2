@@ -1,4 +1,4 @@
-﻿# four-panel
+# four-panel
 
 四格漫画预设 - Minimalist four-panel business allegory comics
 

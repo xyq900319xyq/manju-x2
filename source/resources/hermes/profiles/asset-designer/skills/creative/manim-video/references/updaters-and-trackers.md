@@ -1,4 +1,4 @@
-﻿# Updaters and Value Trackers
+# Updaters and Value Trackers
 
 ## The problem updaters solve
 

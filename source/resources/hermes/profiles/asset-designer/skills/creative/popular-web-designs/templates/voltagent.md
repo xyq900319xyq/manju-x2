@@ -1,4 +1,4 @@
-﻿# Design System: VoltAgent
+# Design System: VoltAgent
 
 
 > **Hermes Agent — Implementation Notes**

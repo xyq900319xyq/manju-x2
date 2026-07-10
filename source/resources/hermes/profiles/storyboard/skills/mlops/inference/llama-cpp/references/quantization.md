@@ -1,4 +1,4 @@
-﻿# GGUF Quantization Guide
+# GGUF Quantization Guide
 
 Complete guide to GGUF quantization formats and model conversion.
 

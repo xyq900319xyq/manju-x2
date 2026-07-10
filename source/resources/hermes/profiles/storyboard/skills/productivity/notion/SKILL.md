@@ -1,4 +1,4 @@
-﻿---
+---
 name: notion
 description: "Notion API + ntn CLI: pages, databases, markdown, Workers."
 version: 2.0.0

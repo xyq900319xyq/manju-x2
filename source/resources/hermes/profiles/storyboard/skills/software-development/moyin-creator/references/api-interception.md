@@ -1,4 +1,4 @@
-﻿# API Request Interception (Runtime Capture)
+# API Request Interception (Runtime Capture)
 
 To see exactly what prompts and images the software sends to APIs, inject `fetch` interception into the bundled JS and capture via a local HTTP server.
 

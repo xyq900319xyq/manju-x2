@@ -1,4 +1,4 @@
-﻿# Editing Presentations
+# Editing Presentations
 
 ## Template-Based Workflow
 

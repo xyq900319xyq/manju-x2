@@ -1,4 +1,4 @@
-﻿# romantic
+# romantic
 
 浪漫基调 - Soft, beautiful, emotionally delicate
 

@@ -1,4 +1,4 @@
-﻿# TouchDesigner Python API Reference
+# TouchDesigner Python API Reference
 
 ## The td Module
 

@@ -1,4 +1,4 @@
-﻿# AI Drama Tools Comparison (May 2026)
+# AI Drama Tools Comparison (May 2026)
 
 Comparison of open-source AI short drama/comic production tools evaluated during the waoowaoo → 魔因 migration.
 

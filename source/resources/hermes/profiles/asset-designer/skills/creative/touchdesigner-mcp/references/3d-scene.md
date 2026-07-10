@@ -1,4 +1,4 @@
-﻿# 3D Scene Reference
+# 3D Scene Reference
 
 Lighting rigs, shadows, IBL/cubemaps, multi-camera, and PBR materials. For wireframe rendering and feedback TOPs see `operator-tips.md`. For instancing geometry see `geometry-comp.md`. For shader code see `glsl.md`.
 

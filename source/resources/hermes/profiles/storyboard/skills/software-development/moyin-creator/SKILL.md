@@ -1,4 +1,4 @@
-﻿---
+---
 name: moyin-creator
 description: Debug, develop, and modify Moyin Creator (魔因漫创), an open-source (AGPL-3.0) Electron-based AI film production tool. Covers full-source dev workflow (npm run dev/build), prompt compilation pipeline, finding lost generated images, fixing broken data associations, and diagnosing generation failures. The app.asar patching era is over — now we modify TypeScript source directly.
 ---

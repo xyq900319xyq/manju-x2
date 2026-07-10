@@ -1,4 +1,4 @@
-﻿# four-panel
+# four-panel
 
 四格漫画 - Strict 2×2 grid, single-page story
 

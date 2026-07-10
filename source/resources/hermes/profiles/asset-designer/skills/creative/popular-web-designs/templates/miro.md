@@ -1,4 +1,4 @@
-﻿# Design System: Miro
+# Design System: Miro
 
 
 > **Hermes Agent — Implementation Notes**

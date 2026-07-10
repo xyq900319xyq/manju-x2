@@ -1,4 +1,4 @@
-﻿# Design System: OpenCode
+# Design System: OpenCode
 
 
 > **Hermes Agent — Implementation Notes**

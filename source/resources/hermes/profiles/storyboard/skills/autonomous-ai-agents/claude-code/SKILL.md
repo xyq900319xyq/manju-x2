@@ -1,4 +1,4 @@
-﻿---
+---
 name: claude-code
 description: "Delegate coding to Claude Code CLI (features, PRs)."
 version: 2.2.0

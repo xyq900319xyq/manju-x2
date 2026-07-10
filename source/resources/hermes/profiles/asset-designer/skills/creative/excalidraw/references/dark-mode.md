@@ -1,4 +1,4 @@
-﻿# Excalidraw Dark Mode Diagrams
+# Excalidraw Dark Mode Diagrams
 
 To create a dark-themed diagram, use a massive dark background rectangle as the **first element** in the array. Make it large enough to cover any viewport:
 

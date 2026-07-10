@@ -1,4 +1,4 @@
-﻿# Prompt Construction
+# Prompt Construction
 
 ## Prompt File Format
 

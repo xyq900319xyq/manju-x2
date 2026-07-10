@@ -1,4 +1,4 @@
-﻿# Design System: Expo
+# Design System: Expo
 
 
 > **Hermes Agent — Implementation Notes**

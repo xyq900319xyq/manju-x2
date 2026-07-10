@@ -1,4 +1,4 @@
-﻿# Architecture Reference
+# Architecture Reference
 
 > **See also:** composition.md · effects.md · scenes.md · shaders.md · inputs.md · optimization.md · troubleshooting.md
 

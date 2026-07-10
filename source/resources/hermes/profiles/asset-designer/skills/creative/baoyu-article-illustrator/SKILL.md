@@ -1,4 +1,4 @@
-﻿---
+---
 name: baoyu-article-illustrator
 description: "Article illustrations: type × style × palette consistency."
 version: 1.57.0

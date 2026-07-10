@@ -1,4 +1,4 @@
-﻿# retro-pop-grid
+# retro-pop-grid
 
 1970s retro pop art with strict Swiss international grid, thick black outlines, and flat color blocks.
 

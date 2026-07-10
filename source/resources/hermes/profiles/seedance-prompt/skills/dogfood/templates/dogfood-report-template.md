@@ -1,4 +1,4 @@
-﻿# Dogfood QA Report
+# Dogfood QA Report
 
 **Target:** {target_url}
 **Date:** {date}

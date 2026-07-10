@@ -1,4 +1,4 @@
-﻿# Design System: MiniMax
+# Design System: MiniMax
 
 
 > **Hermes Agent — Implementation Notes**

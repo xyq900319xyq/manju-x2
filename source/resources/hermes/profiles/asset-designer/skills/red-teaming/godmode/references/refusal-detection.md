@@ -1,4 +1,4 @@
-﻿# Refusal Detection & Response Scoring
+# Refusal Detection & Response Scoring
 
 Ported from G0DM0D3's Tastemaker scoring system. Use these patterns to
 detect whether a model refused, hedged, or complied.

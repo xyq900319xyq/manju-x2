@@ -1,4 +1,4 @@
-﻿# Design System: Together AI
+# Design System: Together AI
 
 
 > **Hermes Agent — Implementation Notes**

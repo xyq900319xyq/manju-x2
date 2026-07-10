@@ -1,4 +1,4 @@
-﻿# Manim Video Skill
+# Manim Video Skill
 
 Production pipeline for mathematical and technical animations using [Manim Community Edition](https://www.manim.community/).
 

@@ -1,4 +1,4 @@
-﻿# Image Recovery Recipe — Moyin Creator
+# Image Recovery Recipe — Moyin Creator
 
 ## Problem
 Generated images exist as PNG files in `media/scenes/` but are not linked to scene records in `scenes.json` or `sclass.json`.

@@ -1,4 +1,4 @@
-﻿# Infographic Content Analysis Framework
+# Infographic Content Analysis Framework
 
 Deep analysis framework applying instructional design principles to infographic creation.
 

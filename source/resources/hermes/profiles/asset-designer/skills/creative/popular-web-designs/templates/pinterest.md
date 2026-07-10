@@ -1,4 +1,4 @@
-﻿# Design System: Pinterest
+# Design System: Pinterest
 
 
 > **Hermes Agent — Implementation Notes**
