@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.14"
+#define MyAppVersion "1.1.5.15"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -162,15 +162,20 @@ begin
   NeedsRestart := False;
 end;
 
-// v1.1.5.14 line 2 - 装前整目录删 _internal/ + launcher EXE
-// user 反馈"装好还是 v1.1.4,EXE 修改时间还是 23:16" = Setup.exe 静默跳过覆盖被锁文件
-// Inno Setup 6.7.3 的 CurStepChanged 是 procedure 不是 function
+// v1.1.5.15 line 2 - 装前整目录删 _internal/ + launcher EXE
+// v1.1.5.14 还不够!user 反馈"装完还是 v1.1.4"——根因是用 Exec('cmd /C del ...', ..., ewNoWait, ...)
+// Exec 默认异步,Inno Setup 立即继续 ssInstall 装文件,但 cmd 子进程还没退 + 旧文件还没真删,
+// 装新文件时目标路径还有旧文件锁 → Inno Setup 跳过覆盖。
+// 修法:Exec 用 ewWaitUntilTerminated 同步等子进程退,再 FileExists/DirExists 二次检查,
+// 还存在就再用 Cmd_try_again 删一次(用户反馈"还是 v1.1.4"必须 100% 删干净)。
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   ResultCode: Integer;
   AppDir: String;
   ExePath: String;
   InternalDir: String;
+  ExeStillThere: Boolean;
+  DirStillThere: Boolean;
 begin
   if CurStep = ssInstall then
   begin
@@ -179,32 +184,70 @@ begin
     InternalDir := AppDir + '\_internal';
 
     // 1. 杀光所有可能锁文件的进程
-    Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewNoWait, ResultCode);
-    Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewNoWait, ResultCode);
-    Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewNoWait, ResultCode);
-    Exec('taskkill', '/F /IM pythonw.exe', '', SW_HIDE, ewNoWait, ResultCode);
-    Sleep(3000);
+    Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('taskkill', '/F /IM pythonw.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(5000);  // 等 Windows 文件句柄完全释放(从 3000 加到 5000)
 
-    // 2. 删 launcher EXE(强删 + 改名兜底)
+    // 2. 删 launcher EXE(同步 + 二次检查 + 改名兜底 + cmd 重试兜底)
+    ExeStillThere := True;
     if FileExists(ExePath) then
     begin
-      Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewNoWait, ResultCode);
-      Sleep(1000);
+      // 第一次:cmd /C del /F /Q 同步等
+      Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+      // 二次检查
       if FileExists(ExePath) then
       begin
-        RenameFile(ExePath, ExePath + '.locked');
+        // 第二次:cmd /C del /F /Q 再删一次(可能第一次 cmd 还没真释放)
+        Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        Sleep(2000);
+        // 改名兜底(改名不依赖文件锁释放,只需要 metadata 写权限)
+        if FileExists(ExePath) then
+        begin
+          RenameFile(ExePath, ExePath + '.locked');
+          ExeStillThere := False;  // 改名成功算处理
+        end;
+      end
+      else
+      begin
+        ExeStillThere := False;  // 第一次 del 成功
       end;
+    end
+    else
+    begin
+      ExeStillThere := False;  // 文件本来就不在
     end;
 
-    // 3. 删整个 _internal/ 目录(强删 + 改名兜底)
+    // 3. 删整个 _internal/ 目录(同步 + 二次检查 + 改名兜底 + cmd 重试兜底)
+    DirStillThere := True;
     if DirExists(InternalDir) then
     begin
-      Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewNoWait, ResultCode);
-      Sleep(2000);
+      // 第一次:cmd /C rmdir /S /Q 同步等
+      Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(3000);
+      // 二次检查
       if DirExists(InternalDir) then
       begin
-        RenameFile(InternalDir, InternalDir + '.locked');
+        // 第二次:cmd /C rmdir /S /Q 再删一次
+        Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        Sleep(3000);
+        // 改名兜底
+        if DirExists(InternalDir) then
+        begin
+          RenameFile(InternalDir, InternalDir + '.locked');
+          DirStillThere := False;  // 改名成功算处理
+        end;
+      end
+      else
+      begin
+        DirStillThere := False;  // 第一次 rmdir 成功
       end;
+    end
+    else
+    begin
+      DirStillThere := False;  // 目录本来就不在
     end;
   end;
 end;

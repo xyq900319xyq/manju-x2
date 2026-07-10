@@ -296,7 +296,7 @@ def main() -> int:
         from core.updater import UpdateChecker
         window._updater = UpdateChecker(
             project_root=ROOT,
-            current_version="1.1.5.14",
+            current_version="1.1.5.15",
             parent=window,
         )
         # 监听信号：红点 / 状态栏提示
