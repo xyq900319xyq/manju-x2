@@ -299,3 +299,13 @@ v1.1.5.17 `CurStepChanged` 必须 **takeown + icacls 两步都做**(只 takeown 
 
 ### 教训
 **bump 版本号必须 grep 验证 iss 脚本真的改了 CurStepChanged**(不能光看 Setup.exe 编译成功)。v1.1.5.16 失败根因就是只 bump 版本号 1.1.5.15→1.1.5.16,CurStepChanged 还是 v1.1.5.15 的代码,Setup.exe 跑的是 v1.1.5.15 修复,无效。v1.1.5.17 才真的把 takeown + icacls 写进 CurStepChanged
+
+### 硬约束
+v1.1.5.18 **UI 显示版本号必须查具体显示位置的代码**,不一定走 `QApplication.applicationVersion()`。`main_window.py:557` 之前硬编码 `info.current_version = "1.1.4"`,**所有 main.py:264 / 299 / iss #define 版本号 bump 对 UI 都没影响**。修法:hardcoded → `QApplication.applicationVersion()`(跟 main.py:264 同源,单一权威源)。**Edit 工具可能静默假成功**,改完后必须 Grep / Read 重新验证,不能信 Edit 报告。bump 版本号必查 3 处:`main.py:264` + `main.py:299` + `installer/*.iss #define` + **任何 UI 显示版本号的位置**
+
+### v1.1.5.19 新功能
+- **首次启动 wizard 加自定义 LLM API**:`_AddCustomAPIDialog` 类([first_run_wizard.py:240-371](file:///D:/%E6%BC%AB%E5%89%A7%E5%8A%A9%E6%89%8B/manju-x2/source/src/ui/first_run_wizard.py#L240-L371))收 4 字段(Name/Base URL/Model/API Key)→ `Config.upsert_config()` 写 `hermes_api.json`
+- **wizard 动态刷新行**:`_ConfigKeyGroup.rebuild(items)` 方法([first_run_wizard.py:227-230](file:///D:/%E6%BC%AB%E5%89%A7%E5%8A%A9%E6%89%8B/manju-x2/source/src/ui/first_run_wizard.py#L227-L230))允许加新 config 后重建 UI 行
+- **触发按钮**:`_LLMPage._on_add_custom_clicked`([first_run_wizard.py:473-485](file:///D:/%E6%BC%AB%E5%89%A7%E5%8A%A9%E6%89%8B/manju-x2/source/src/ui/first_run_wizard.py#L473-L485))弹 dialog + 调 rebuild + focus 新行
+- **关键复用**:`Config.upsert_config(cfg)`(`core/config.py:714`)— v0.6.24 就有,wizard v1.1.5.19 才暴露入口。settings_dialog 早就能加,只是首次启动 wizard 不能
+- **不写兜底**:Name/Base URL/Model 必填,API Key 允许空(走 wizard 校验至少 1 个 LLM 有 key)
