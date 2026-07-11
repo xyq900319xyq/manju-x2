@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QWizard, QWizardPage, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QLineEdit, QPushButton, QCheckBox, QGroupBox, QWidget,
     QFrame, QSizePolicy, QSpacerItem, QMessageBox, QTextEdit,
+    QDialog, QDialogButtonBox,
 )
 
 from core.config import Config
@@ -182,27 +183,51 @@ class _KeyRow(QWidget):
 # ---------- 工具：Config 项的 key 编辑器 ----------
 
 class _ConfigKeyGroup(QGroupBox):
-    """根据 config_data 列表自动生成 _KeyRow（一个 config 一行）。"""
+    """根据 config_data 列表自动生成 _KeyRow（一个 config 一行）。
+
+    v1.1.5.19: 加 _build_rows() / rebuild() 方法,允许 wizard 动态加新 config 后
+    刷新 UI 行(原 wizard 只能在启动时读 hermes_api.json 模板生成行,首次启动加新
+    config 后不刷新)。
+    """
     value_changed = Signal()  # 任意 key 变化时发（用于校验）
 
     def __init__(self, title: str, items: List[Dict[str, Any]], parent: Optional[QWidget] = None) -> None:
         super().__init__(title, parent)
         self._rows: List[_KeyRow] = []
-        layout = QVBoxLayout(self)
-        layout.setSpacing(8)
-        for item in items:
+        self._items: List[Dict[str, Any]] = list(items)
+        self._layout = QVBoxLayout(self)
+        self._layout.setSpacing(8)
+        self._build_rows()
+
+    def _build_rows(self) -> None:
+        """从 self._items 重建所有 _KeyRow(每次 rebuild 先清空旧 row)。"""
+        # 清空旧 widget
+        while self._layout.count():
+            item = self._layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+        self._rows = []
+        # 重建
+        for item in self._items:
             label = f"{item.get('name', item.get('id', '?'))} (api_key)"
             placeholder = f"在 {item.get('base_url', '').rstrip('/')} 申请的 API key"
             row = _KeyRow(label, placeholder)
             self._rows.append(row)
-            layout.addWidget(row)
+            self._layout.addWidget(row)
             # v1.0.0 修：row.value_changed 是 Signal(str) (1 参数)，
             # self.value_changed 是 Signal() (0 参数)，需要 lambda 转换
             row.value_changed.connect(lambda _v: self.value_changed.emit())
         # 提示
         hint = QLabel("💡 至少填一个 key 才能继续；点击「显示」核对内容。")
         hint.setStyleSheet("color: #888888; font-size: 11px;")
-        layout.addWidget(hint)
+        self._layout.addWidget(hint)
+
+    def rebuild(self, items: List[Dict[str, Any]]) -> None:
+        """v1.1.5.19: 外部调用,传入新的 items 列表重建 _KeyRow。"""
+        self._items = list(items)
+        self._build_rows()
 
     def values_by_id(self, items: List[Dict[str, Any]]) -> Dict[str, str]:
         """返回 {config_id: api_key} 映射（空串也包含，便于 wizard 清空已填 key）"""
@@ -210,6 +235,139 @@ class _ConfigKeyGroup(QGroupBox):
             items[i].get("id", f"row{i}"): self._rows[i].text()
             for i in range(min(len(items), len(self._rows)))
         }
+
+
+# ---------- v1.1.5.19: 添加自定义 API dialog ----------
+
+class _AddCustomAPIDialog(QDialog):
+    """v1.1.5.19:首次启动 wizard 加自定义 LLM API 的小弹框。
+
+    收 4 个字段:Name / Base URL / Model / API Key
+    - Name / Base URL / Model 必填(空值调 API 必失败)
+    - API Key 允许空(走 wizard 校验至少 1 个 LLM 有 key)
+
+    用户点"添加" → 调 Config.upsert_config 写盘 + 返回 Accepted
+    用户点"取消" → 关闭弹框,不动 hermes_api.json
+
+    主题:暗色卡片风,跟 wizard 一致
+    """
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("添加自定义 LLM API")
+        self.setMinimumWidth(480)
+        self.setStyleSheet(_DARK_QSS + """
+            QDialog { background: #1e1e1e; }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
+
+        # 标题
+        title = QLabel("➕ 添加自定义 LLM API")
+        title.setObjectName("titleLabel")
+        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #ffffff;")
+        layout.addWidget(title)
+
+        subtitle = QLabel(
+            "填写你想接入的 OpenAI 兼容 API 信息。<br>"
+            "<span style='color:#888888;'>提示:Name / Base URL / Model 必填,API Key 可稍后在 wizard 或设置中补充。</span>"
+        )
+        subtitle.setWordWrap(True)
+        subtitle.setStyleSheet("color: #cccccc; font-size: 12px;")
+        layout.addWidget(subtitle)
+
+        # 表单卡片
+        card = QGroupBox("API 配置")
+        form = QFormLayout(card)
+        form.setSpacing(8)
+        form.setContentsMargins(16, 20, 16, 16)
+
+        self._name_edit = QLineEdit()
+        self._name_edit.setPlaceholderText("例如:My OpenAI 中转 / SiliconFlow / 本地 Ollama")
+        form.addRow("显示名 (name):", self._name_edit)
+
+        self._url_edit = QLineEdit()
+        self._url_edit.setPlaceholderText("例如:https://api.openai.com 或 https://your-proxy.com")
+        form.addRow("Base URL:", self._url_edit)
+
+        self._model_edit = QLineEdit()
+        self._model_edit.setPlaceholderText("例如:gpt-4o-mini / deepseek-chat / qwen2.5-72b")
+        form.addRow("Model:", self._model_edit)
+
+        self._key_edit = QLineEdit()
+        self._key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self._key_edit.setPlaceholderText("在该网站申请的 API key(可留空)")
+        form.addRow("API Key:", self._key_edit)
+
+        self._show = QCheckBox("显示 key")
+        self._show.toggled.connect(
+            lambda c: self._key_edit.setEchoMode(
+                QLineEdit.EchoMode.Normal if c else QLineEdit.EchoMode.Password
+            )
+        )
+        form.addRow("", self._show)
+
+        layout.addWidget(card)
+
+        # 按钮行
+        btn_row = QHBoxLayout()
+        btn_row.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        self._cancel_btn = QPushButton("取消")
+        self._cancel_btn.clicked.connect(self.reject)
+        self._add_btn = QPushButton("添加")
+        self._add_btn.setObjectName("primaryButton")
+        self._add_btn.setDefault(True)
+        self._add_btn.clicked.connect(self._on_add_clicked)
+        btn_row.addWidget(self._cancel_btn)
+        btn_row.addWidget(self._add_btn)
+        layout.addLayout(btn_row)
+
+        # Enter 触发 add,Esc 触发 cancel
+        self._name_edit.setFocus()
+
+    def _on_add_clicked(self) -> None:
+        name = self._name_edit.text().strip()
+        url = self._url_edit.text().strip().rstrip("/")
+        model = self._model_edit.text().strip()
+        key = self._key_edit.text().strip()
+
+        # 校验:3 项必填
+        if not name:
+            QMessageBox.warning(self, "未填名称", "请填写「显示名」")
+            self._name_edit.setFocus()
+            return
+        if not url:
+            QMessageBox.warning(self, "未填 Base URL", "请填写「Base URL」(OpenAI 兼容 API 的入口地址)")
+            self._url_edit.setFocus()
+            return
+        if not model:
+            QMessageBox.warning(self, "未填 Model", "请填写「Model」(模型名,例如 gpt-4o-mini / deepseek-chat)")
+            self._model_edit.setFocus()
+            return
+
+        # 写入 hermes_api.json(通过 Config.upsert_config 持久化)
+        import uuid
+        new_cfg = {
+            "id": uuid.uuid4().hex[:8],
+            "name": name,
+            "provider": "custom",
+            "model": model,
+            "base_url": url,
+            "api_key": key,
+        }
+        try:
+            cfg = Config.get()
+            cfg.upsert_config(new_cfg)
+        except Exception as e:  # noqa: BLE001
+            log.exception("upsert_config 失败")
+            QMessageBox.critical(self, "添加失败", f"写入 hermes_api.json 失败:\n\n{e}")
+            return
+
+        log.info("wizard: 添加自定义 LLM config (id=%s, name=%s, base_url=%s, model=%s, has_key=%s)",
+                 new_cfg["id"], name, url, model, "yes" if key else "no")
+        self.accept()
 
 
 # ---------- 页面：欢迎 ----------
@@ -294,12 +452,37 @@ class _LLMPage(QWizardPage):
         )
         self._group.value_changed.connect(self._on_changed)
         layout.addWidget(self._group)
-        layout.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Expanding))
+
+        # v1.1.5.19: 加 "添加自定义 API" 按钮 — 让用户填自己的 OpenAI 兼容 base_url
+        # 而不是只能选预设的 DeepSeek / Agnes / 创维中转
+        self._add_custom_btn = QPushButton("➕ 添加自定义 API（自己填网站）")
+        self._add_custom_btn.setToolTip(
+            "不限于预设的 3 个 API 站 — 任何 OpenAI 兼容的 API 都能加\n"
+            "（如 OpenAI / 中转站 / SiliconFlow / Ollama / 第三方等）"
+        )
+        self._add_custom_btn.clicked.connect(self._on_add_custom_clicked)
+        layout.addWidget(self._add_custom_btn)
+
+        layout.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         self._err_label = QLabel("")
         self._err_label.setStyleSheet("color: #ff6b6b; font-size: 11px;")
         self._err_label.setWordWrap(True)
         layout.addWidget(self._err_label)
         self._update_validation()
+
+    def _on_add_custom_clicked(self) -> None:
+        """v1.1.5.19: 弹 _AddCustomAPIDialog 收 4 字段,调 Config.upsert_config 写盘,刷新 UI。"""
+        dlg = _AddCustomAPIDialog(self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return  # 用户取消
+        # 新 config 已写 hermes_api.json,这里刷新 _group 展示新行
+        self._group.rebuild(list(self._config.all_configs))
+        # 自动 focus 到新行的 api_key 输入框(最后一行)
+        new_idx = len(self._config.all_configs) - 1
+        if 0 <= new_idx < len(self._group._rows):
+            self._group._rows[new_idx]._edit.setFocus()
+        self._update_validation()
+        self.completeChanged.emit()
 
     def _on_changed(self) -> None:
         self._update_validation()
