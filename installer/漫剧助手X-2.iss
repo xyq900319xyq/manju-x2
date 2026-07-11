@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.15"
+#define MyAppVersion "1.1.5.17"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
@@ -162,20 +162,27 @@ begin
   NeedsRestart := False;
 end;
 
-// v1.1.5.15 line 2 - 装前整目录删 _internal/ + launcher EXE
-// v1.1.5.14 还不够!user 反馈"装完还是 v1.1.4"——根因是用 Exec('cmd /C del ...', ..., ewNoWait, ...)
-// Exec 默认异步,Inno Setup 立即继续 ssInstall 装文件,但 cmd 子进程还没退 + 旧文件还没真删,
-// 装新文件时目标路径还有旧文件锁 → Inno Setup 跳过覆盖。
-// 修法:Exec 用 ewWaitUntilTerminated 同步等子进程退,再 FileExists/DirExists 二次检查,
-// 还存在就再用 Cmd_try_again 删一次(用户反馈"还是 v1.1.4"必须 100% 删干净)。
+// v1.1.5.17 line 3 - takeown + icacls 暴力解锁 Windows 文件 metadata 写权限
+// v1.1.5.15~5.16 连续 2 版都失败!user 反馈"没有用没有用,一点用也没有"——
+// 真正根因:Windows 文件被锁时,不仅 del/rmdir 删不掉、RenameFile 改名也失败——
+// **锁占 metadata 写权限**(hermes.exe 子进程 / Defender 实时扫描 / 360 占用 /
+// explorer.exe 缩略图缓存)。就算 v1.1.5.15 同步等子进程退 + RenameFile 兜底,
+// 锁占的 metadata 写权限也释放不了,RenameFile 失败 → Inno Setup 装新文件时
+// 目标路径还有老 _internal/ → 静默跳过覆盖 → EXE 仍是 v1.1.4。
+//
+// 修法(4 步,必须按顺序):
+// 1. taskkill /F 杀光 漫剧助手X-2.exe / hermes.exe / python.exe / pythonw.exe
+// 2. takeown /F "...\_internal" /R /A /D Y 暴力夺所有权给 administrators 组
+//    (这条是**关键**——没 takeown,administrators 也没 metadata 写权限)
+// 3. icacls "...\_internal" /grant administrators:F /T /C /Q 赋 administrators:F
+//    (这条也是**关键**——没 icacls,owner 改了但 ACL 没改,还是写不了)
+// 4. 之后 cmd /C del /F /Q / rmdir /S /Q 才能真删,Inno Setup 装新文件不跳过
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   ResultCode: Integer;
   AppDir: String;
   ExePath: String;
   InternalDir: String;
-  ExeStillThere: Boolean;
-  DirStillThere: Boolean;
 begin
   if CurStep = ssInstall then
   begin
@@ -183,71 +190,64 @@ begin
     ExePath := AppDir + '\{#MyAppExeName}';
     InternalDir := AppDir + '\_internal';
 
-    // 1. 杀光所有可能锁文件的进程
+    // 第 1 步:杀光所有可能锁文件的进程(同步等)
     Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec('taskkill', '/F /IM hermes.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec('taskkill', '/F /IM python.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec('taskkill', '/F /IM pythonw.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    Sleep(5000);  // 等 Windows 文件句柄完全释放(从 3000 加到 5000)
+    Sleep(5000);  // 等 Windows 文件句柄完全释放
 
-    // 2. 删 launcher EXE(同步 + 二次检查 + 改名兜底 + cmd 重试兜底)
-    ExeStillThere := True;
-    if FileExists(ExePath) then
-    begin
-      // 第一次:cmd /C del /F /Q 同步等
-      Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-      Sleep(2000);
-      // 二次检查
-      if FileExists(ExePath) then
-      begin
-        // 第二次:cmd /C del /F /Q 再删一次(可能第一次 cmd 还没真释放)
-        Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-        Sleep(2000);
-        // 改名兜底(改名不依赖文件锁释放,只需要 metadata 写权限)
-        if FileExists(ExePath) then
-        begin
-          RenameFile(ExePath, ExePath + '.locked');
-          ExeStillThere := False;  // 改名成功算处理
-        end;
-      end
-      else
-      begin
-        ExeStillThere := False;  // 第一次 del 成功
-      end;
-    end
-    else
-    begin
-      ExeStillThere := False;  // 文件本来就不在
-    end;
-
-    // 3. 删整个 _internal/ 目录(同步 + 二次检查 + 改名兜底 + cmd 重试兜底)
-    DirStillThere := True;
+    // 第 2 步:takeown 暴力夺取 _internal/ 整目录所有权
     if DirExists(InternalDir) then
     begin
-      // 第一次:cmd /C rmdir /S /Q 同步等
+      // /R 递归 /A 给 administrators 组 /D Y 自动同意所有提示
+      Exec('takeown', '/F "' + InternalDir + '" /R /A /D Y', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+    end;
+
+    // 第 3 步:takeown + icacls 暴力解锁 launcher EXE
+    if FileExists(ExePath) then
+    begin
+      Exec('takeown', '/F "' + ExePath + '" /A', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(1000);
+      Exec('icacls', '"' + ExePath + '" /grant administrators:F /C /Q', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(1000);
+    end;
+
+    // 第 4 步:icacls 暴力赋权 _internal/ 整目录
+    if DirExists(InternalDir) then
+    begin
+      // /T 递归 /C 继续错误 /Q 静默
+      Exec('icacls', '"' + InternalDir + '" /grant administrators:F /T /C /Q', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+    end;
+
+    // 第 5 步:删 launcher EXE(同步 + 二次检查 + 改名兜底)
+    if FileExists(ExePath) then
+    begin
+      Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+      if FileExists(ExePath) then
+      begin
+        Exec('cmd.exe', '/C del /F /Q "' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        Sleep(2000);
+        if FileExists(ExePath) then
+          RenameFile(ExePath, ExePath + '.locked');  // 改名兜底
+      end;
+    end;
+
+    // 第 6 步:删整个 _internal/ 目录(同步 + 二次检查 + 改名兜底)
+    if DirExists(InternalDir) then
+    begin
       Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
       Sleep(3000);
-      // 二次检查
       if DirExists(InternalDir) then
       begin
-        // 第二次:cmd /C rmdir /S /Q 再删一次
         Exec('cmd.exe', '/C rmdir /S /Q "' + InternalDir + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
         Sleep(3000);
-        // 改名兜底
         if DirExists(InternalDir) then
-        begin
-          RenameFile(InternalDir, InternalDir + '.locked');
-          DirStillThere := False;  // 改名成功算处理
-        end;
-      end
-      else
-      begin
-        DirStillThere := False;  // 第一次 rmdir 成功
+          RenameFile(InternalDir, InternalDir + '.locked');  // 改名兜底
       end;
-    end
-    else
-    begin
-      DirStillThere := False;  // 目录本来就不在
     end;
   end;
 end;
