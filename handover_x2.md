@@ -290,3 +290,12 @@ v1.1.5.13 EXE 锁装时跳过覆盖(双保险 restartreplace + PrepareToInstall)
 
 ### 硬约束
 v1.1.5.14 整目录删 _internal/(CurStepChanged procedure 不是 function)
+
+### 硬约束
+v1.1.5.15 全部 `Exec` 改 `ewWaitUntilTerminated` 同步等子进程退(默认 `ewNoWait` 异步导致旧文件没真删 Inno Setup 装新文件时跳过覆盖)
+
+### 硬约束
+v1.1.5.17 `CurStepChanged` 必须 **takeown + icacls 两步都做**(只 takeown 不 icacls ACL 没改 / 只 icacls 不 takeown owner 没换 都不行),按 6 步顺序:taskkill 杀进程 → Sleep 5000 → takeown _internal /R /A /D Y → takeown launcher + icacls launcher /grant administrators:F → icacls _internal /grant administrators:F /T /C /Q → cmd del + cmd rmdir(同步 + 二次检查 + RenameFile 改名兜底)
+
+### 教训
+**bump 版本号必须 grep 验证 iss 脚本真的改了 CurStepChanged**(不能光看 Setup.exe 编译成功)。v1.1.5.16 失败根因就是只 bump 版本号 1.1.5.15→1.1.5.16,CurStepChanged 还是 v1.1.5.15 的代码,Setup.exe 跑的是 v1.1.5.15 修复,无效。v1.1.5.17 才真的把 takeown + icacls 写进 CurStepChanged
