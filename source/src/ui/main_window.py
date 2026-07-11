@@ -554,7 +554,12 @@ class MainWindow(QMainWindow):
         log.info("用户主动检查更新")
         # 同步拉(用户主动行为,等他 1-2s 比弹"正在查"更直接)
         info = fetch_latest_release()
-        info.current_version = "1.1.4"
+        # v1.1.5.18【P0 修复 - UI 永远显示 v1.1.4 BUG】:之前硬编码
+        # info.current_version = "1.1.4",导致不管 main.py:264
+        # setApplicationVersion 改成几,UI 弹框永远显示 "当前版本 v1.1.4"。
+        # 改用 QApplication.applicationVersion() 跟 main.py:264 的
+        # setApplicationVersion() 同源(单一权威源,改一处生效)。
+        info.current_version = QApplication.applicationVersion()
         if not info.error_msg and info.latest_version:
             info.has_update = has_newer_version(info.current_version, info.latest_version)
         # 同步把结果塞给 self._updater.latest_info(让红点逻辑也走通)
