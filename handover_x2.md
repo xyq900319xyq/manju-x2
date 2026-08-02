@@ -2,10 +2,13 @@
 
 ## 一、当前版本
 
-- v1.1.5.15 (2026-07-11) — Exec 改 ewWaitUntilTerminated 同步等(彻底修 v1.1.5.14 失败)
+- **v1.1.5.20 (2026-07-30) — 分镜智能体选择(分镜 / 分镜2 切换)**
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
-- 用户版 173 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
+- 用户版 174 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
+- 最新 commit: `d88727b` pushed to main
+- GitHub release: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.20
+- Setup.exe md5: `31a0c11a95396b68152be80e21e10d8a` / sha256: `163e693ba18334163ba2717440d9219ff812b18a74bc2d663098b227fed329b0`
 
 ## 二、v1.1.5 — 16 个 BUG 全面修复(2026-07-10)
 
@@ -128,6 +131,7 @@
 - v1.1.5:导入剧本崩溃 + 项目树 CRUD 状态问题 + StoryboardTask cancel 失效 + 创维拉不到更新 + prompt 回滚 + 16 个 BUG 全面修
 - v1.1.5.4:清空分镜 / 清空 prompt / 提取到视频 页面不刷新
 - v1.1.5.5:生提示词报 "无法读取文件:Git Bash 未安装" → 自带 PortableGit 装机
+- v1.1.5.20:分镜智能体选择(分镜 / 分镜2 切换) — X-1 加的分镜功能,user 明确要求 X-2 同步
 
 ## 七、v1.1.5.1~v1.1.5.4 — 4 个连续小修复
 
@@ -309,3 +313,63 @@ v1.1.5.18 **UI 显示版本号必须查具体显示位置的代码**,不一定�
 - **触发按钮**:`_LLMPage._on_add_custom_clicked`([first_run_wizard.py:473-485](file:///D:/%E6%BC%AB%E5%89%A7%E5%8A%A9%E6%89%8B/manju-x2/source/src/ui/first_run_wizard.py#L473-L485))弹 dialog + 调 rebuild + focus 新行
 - **关键复用**:`Config.upsert_config(cfg)`(`core/config.py:714`)— v0.6.24 就有,wizard v1.1.5.19 才暴露入口。settings_dialog 早就能加,只是首次启动 wizard 不能
 - **不写兜底**:Name/Base URL/Model 必填,API Key 允许空(走 wizard 校验至少 1 个 LLM 有 key)
+
+## 十三、v1.1.5.20 (2026-07-30) — 分镜智能体选择(分镜 / 分镜2 切换)【当前版本】
+
+### 需求来源
+- user 反馈:"我要给 X-1 软件里的分镜功能里加一个功能,在点击生成分镜或重新生成分镜时,要设置一个智能体选择,这个选择里现有的智能体是一个选项,另一个选项要你去复制回来,另一个智能体在 D:\Hermes\profiles\storyboard2,名字叫分镜2"
+
+### 实现 4 步
+1. **复制 profile**:`D:\Hermes\profiles\storyboard2` → `source/resources/hermes/profiles/storyboard2`
+   - 拷 5 项:SOUL.md / config.yaml / auth.json / .env / skills/
+   - 跳过 hermes 运行时数据(让 hermes 启动自己重新生成):cache/ logs/ sessions/ projects.db/ .curator_state/ .usage.json/ state.db/ auth.lock/ .bundled_manifest/ .archive/ .hub/ .curator_backups/ tests/ image_cache/ audio_cache/ output/ sandboxes/ curator/ hooks/ plans/ workspace/ home/ prompts/ singularity/ pairing/ terminal
+2. **注册 profile**:`source/config/hermes_api.json` `profiles` dict 加 `"storyboard2": "storyboard2"`
+3. **Task 参数**:`source/src/core/generators.py`
+   - `StoryboardTask.__init__` 加 `profile_key: str = "storyboard"` 参数
+   - 存 `self._profile_key`,`_call_hermes_storyboard` 改用 `self._config.profile_for(self._profile_key)`
+   - `emit_progress` 消息带 profile 名,方便日志区分哪个智能体在跑
+4. **UI 选择器**:`source/src/ui/main_window.py` 分镜 panel 加 `_sb_agent_combo` QComboBox
+   - 选项 `("分镜", "storyboard")` + `("分镜2", "storyboard2")`
+   - **只列 config 里注册过的 key**(避免出现"选项在但点击报未注册"的不一致状态)
+   - `_on_generate_storyboard` 读 `combo.currentData()` 传给 StoryboardTask
+   - 状态栏显示 `已入队: <task>（智能体: <profile_key>）`
+
+### 关键设计点
+- **profile_key 默认值 = "storyboard"**:保持向后兼容,旧 user 不感知新参数
+- **UI 只列已注册 key**:跟 `hermes_api.json` 单一权威源对齐,避免 user 选了但代码报 KeyError
+- **不改 prompt 输出文件命名规则**:分镜 / prompt 文件仍按 `项目名--第X集--分镜词` 命名,跟之前完全一致
+- **emit_progress 带 profile 名**:日志 `（智能体: storyboard2）` 区分,排查时一眼能看出谁在跑
+
+### 踩坑:storyboard2 同步时 .gitignore 漏过滤
+- v1.1.5.20 第一次 `git add source/resources/hermes/profiles/storyboard2/` 误带入运行时文件
+- 根因:`.gitignore` 只过滤 `<profile>/xxx/` 模式,但 hermes 运行时数据实际在 `<profile>/skills/xxx/`,**多一层 skills/ 就匹配不到**
+- 修法:.gitignore 补全,`<profile>/skills/<name>` 模式跟 `<profile>/<name>` 模式都加(memory hard constraint 1.1.5.8 教训)
+- 新增过滤项:logs/ cron/ tirith/ ollama_cloud_models_cache.json/ provider_models_cache.json/ openrouter_model_metadata.json/ *.usage.json/ *.lock/ *.curator_state/ .bundled_manifest/ .curator_backups/ .archive/ .hub/ tests/ image_cache/ audio_cache/ output/ sandboxes/ curator/ hooks/ plans/ workspace/ home/ prompts/ singularity/ terminal
+- 验证:`git diff --cached --name-only | grep -E 'state\.db|auth\.lock|\.usage|\.curator|\.bundled|\.archive|\.hub'` 必须为空
+
+### 改动文件(7 个)
+| 文件 | 改动 |
+|---|---|
+| `source/resources/hermes/profiles/storyboard2/` | 新加,5 项 (SOUL.md/config.yaml/auth.json/.env/skills/) |
+| `source/config/hermes_api.json` | profiles dict 加 `"storyboard2": "storyboard2"` 1 行 |
+| `source/src/core/generators.py` | StoryboardTask 加 profile_key 参数 + 2 处 profile_for 改用 self._profile_key + emit_progress 带 profile 名 |
+| `source/src/ui/main_window.py` | 分镜 panel 加 _sb_agent_combo + _on_generate_storyboard 读 combo 传 profile_key |
+| `source/src/main.py` | line 264 + 299 bump 1.1.5.19 → 1.1.5.20 |
+| `installer/漫剧助手X-2.iss` | `#define MyAppVersion "1.1.5.20"` |
+| `.gitignore` | 补全 hermes 运行时数据过滤规则(`<profile>/skills/<name>` 模式) |
+
+### 验证
+- 8 个代码文件 `py_compile` 全过
+- Setup.exe 174 MB build 成功
+- md5=`31a0c11a95396b68152be80e21e10d8a`,sha256=`163e693ba18334163ba2717440d9219ff812b18a74bc2d663098b227fed329b0`
+- update.json 自动写到 v1.1.5.20
+- commit `d88727b` pushed to origin/main (709 files,无运行时文件污染)
+- GitHub release `v1.1.5.20` 创建 + 3 个 asset (Setup.exe/.md5/.sha256) 上传成功
+
+### 硬约束
+v1.1.5.20 storyboard2 同步时 `.gitignore` 必须覆盖 `<profile>/skills/<name>` 模式(运行时数据在 skills/ 子目录,**不**是 profile 根)
+v1.1.5.20 UI 选择器只列 `hermes_api.json` `profiles` dict 已注册 key(单一权威源)
+v1.1.5.20 `StoryboardTask.__init__` `profile_key` 参数必须存到 `self._profile_key`,**不**允许在 `_call_hermes_storyboard` 里硬编码回 "storyboard"
+
+### 临时方案(等不及 v1.1.5.20 的 user)
+- 直接编辑 `D:\hermes\profiles\storyboard2` 改 hermes 用的 prompt 即可(所有分镜都走 storyboard profile)
