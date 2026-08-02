@@ -61,6 +61,66 @@ source/resources/hermes/profiles/*/processes.json
 source/resources/hermes/profiles/*/.skills_prompt_snapshot.json
 source/resources/hermes/profiles/*/.update_check
 source/resources/hermes/profiles/*/*.bak*
+# v1.1.5.20:storyboard2 profile 同步时过滤 hermes 运行时数据(memory hard constraint)
+# 不能让脚本同步:logs/ cron/ bin/ cache/ sessions/ state.db* auth.lock* tirith
+# *.usage.json *.lock *.curator_state .bundled_manifest .skills_prompt_snapshot.json
+# .update_check .curator_backups .archive .hub tests/ image_cache audio_cache
+# output sandboxes curator hooks plans workspace home prompts singularity pairing terminal
+# 注意:运行时数据在 <profile>/skills/ 下面(不是 <profile>/),所以两个 path 都加
+source/resources/hermes/profiles/*/logs/
+source/resources/hermes/profiles/*/skills/logs/
+source/resources/hermes/profiles/*/cron/
+source/resources/hermes/profiles/*/skills/cron/
+source/resources/hermes/profiles/*/tirith
+source/resources/hermes/profiles/*/skills/tirith
+source/resources/hermes/profiles/*/ollama_cloud_models_cache.json
+source/resources/hermes/profiles/*/skills/ollama_cloud_models_cache.json
+source/resources/hermes/profiles/*/provider_models_cache.json
+source/resources/hermes/profiles/*/skills/provider_models_cache.json
+source/resources/hermes/profiles/*/openrouter_model_metadata.json
+source/resources/hermes/profiles/*/skills/openrouter_model_metadata.json
+source/resources/hermes/profiles/*/*.usage.json
+source/resources/hermes/profiles/*/skills/*.usage.json
+source/resources/hermes/profiles/*/*.usage.json.lock
+source/resources/hermes/profiles/*/skills/*.usage.json.lock
+source/resources/hermes/profiles/*/*.lock
+source/resources/hermes/profiles/*/skills/*.lock
+source/resources/hermes/profiles/*/*.curator_state
+source/resources/hermes/profiles/*/skills/*.curator_state
+source/resources/hermes/profiles/*/.bundled_manifest
+source/resources/hermes/profiles/*/skills/.bundled_manifest
+source/resources/hermes/profiles/*/.curator_backups/
+source/resources/hermes/profiles/*/skills/.curator_backups/
+source/resources/hermes/profiles/*/.archive/
+source/resources/hermes/profiles/*/skills/.archive/
+source/resources/hermes/profiles/*/.hub/
+source/resources/hermes/profiles/*/skills/.hub/
+source/resources/hermes/profiles/*/tests/
+source/resources/hermes/profiles/*/skills/tests/
+source/resources/hermes/profiles/*/image_cache/
+source/resources/hermes/profiles/*/skills/image_cache/
+source/resources/hermes/profiles/*/audio_cache/
+source/resources/hermes/profiles/*/skills/audio_cache/
+source/resources/hermes/profiles/*/output/
+source/resources/hermes/profiles/*/skills/output/
+source/resources/hermes/profiles/*/sandboxes/
+source/resources/hermes/profiles/*/skills/sandboxes/
+source/resources/hermes/profiles/*/curator/
+source/resources/hermes/profiles/*/skills/curator/
+source/resources/hermes/profiles/*/hooks/
+source/resources/hermes/profiles/*/skills/hooks/
+source/resources/hermes/profiles/*/plans/
+source/resources/hermes/profiles/*/skills/plans/
+source/resources/hermes/profiles/*/workspace/
+source/resources/hermes/profiles/*/skills/workspace/
+source/resources/hermes/profiles/*/home/
+source/resources/hermes/profiles/*/skills/home/
+source/resources/hermes/profiles/*/prompts/
+source/resources/hermes/profiles/*/skills/prompts/
+source/resources/hermes/profiles/*/singularity/
+source/resources/hermes/profiles/*/skills/singularity/
+source/resources/hermes/profiles/*/terminal/
+source/resources/hermes/profiles/*/skills/terminal/
 # hermes 顶层运行时残留(用户数据,绝不入 public repo)
 source/resources/hermes/sessions/
 source/resources/hermes/memories/

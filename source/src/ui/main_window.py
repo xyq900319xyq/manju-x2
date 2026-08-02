@@ -2731,15 +2731,23 @@ class MainWindow(QMainWindow):
             return
         # v0.6.17：注入前序剧集摘要。v0.6.28：style_id / render_type 由 Task 内部从 project 读
         previous_summaries = self._get_previous_summaries(ep)
+        # v1.1.5.20:从分镜智能体下拉读 profile_key
+        profile_key = "storyboard"
+        combo = getattr(self, "_sb_agent_combo", None)
+        if combo is not None and combo.count() > 0:
+            data = combo.currentData()
+            if data:
+                profile_key = str(data)
         task = StoryboardTask(
             ep,
             self._current_project,
             self.config,
             parent=self,
             previous_summaries=previous_summaries,
+            profile_key=profile_key,
         )
         self.task_queue.enqueue(task)
-        self.status_msg.setText(f"已入队: {task.name}")
+        self.status_msg.setText(f"已入队: {task.name}（智能体: {profile_key}）")
 
     @Slot()
     def _on_generate_prompt(self) -> None:

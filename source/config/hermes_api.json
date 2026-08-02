@@ -41,6 +41,7 @@
   "active": "deepseek",
   "profiles": {
     "storyboard": "storyboard",
+    "storyboard2": "storyboard2",
     "video_prompt": "seedance-prompt",
     "asset": "asset-designer"
   },

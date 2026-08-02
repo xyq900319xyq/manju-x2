@@ -524,12 +524,16 @@ class StoryboardTask(Task):
         output_dir: Optional[Path] = None,
         # v0.6.17 新参数
         previous_summaries: Optional[list] = None,
+        # v1.1.5.20:分镜智能体选择("storyboard"=分镜, "storyboard2"=分镜2)
+        profile_key: str = "storyboard",
     ) -> None:
         super().__init__(name=f"分镜生成 #{episode.episode_num}", parent=parent)
         self._episode = episode
         self._project = project
         self._config = config
         self._output_dir = _safe_output_dir(config, output_dir)
+        # v1.1.5.20:存 profile_key 供 _call_hermes_storyboard 查
+        self._profile_key = profile_key
         # v0.6.28：style_id / render_type 直接从项目级读
         style_id = getattr(project, "style_id", None) or None
         render_type = getattr(project, "render_type", None) or None
@@ -689,9 +693,10 @@ class StoryboardTask(Task):
 
     def _build_manju_task(self, output_file: Path) -> "tuple[ManjuTask, Optional[Path]]":
         try:
-            profile = self._config.profile_for("storyboard")
+            # v1.1.5.20:用 __init__ 传入的 profile_key,支持 storyboard / storyboard2 切换
+            profile = self._config.profile_for(self._profile_key)
         except (KeyError, ConfigError) as e:
-            raise RuntimeError("未注册 storyboard profile") from e
+            raise RuntimeError(f"未注册 {self._profile_key} profile") from e
 
         r = self._request
         # v0.6.17：data = 完整剧本（不是简介）；instruction = 整个 build_storyboard_prompt
