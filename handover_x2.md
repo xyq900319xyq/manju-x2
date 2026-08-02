@@ -53,11 +53,16 @@
 - `.publish_v1.1.5.22.py` (raw binary POST 发布脚本)
 - `release/.commit_msg_v1.1.5.22.txt` (commit msg)
 
-### 🟢 自动化发布流程(已跑)
+### 🟢 自动化发布流程(已跑 2026-08-02 17:35)
 1. `python build_x2.py` → `release/X-2_v1.1.5.22_Setup.exe` (174 MB) + .md5 + .sha256
-2. `MANJU_X2_PAT=... python .publish_v1.1.5.22.py` → 自动创/更新 GitHub release + raw binary POST 上传 3 个 asset
-3. release URL: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.22
-4. update.json 指向 v1.1.5.22,已装 v1.1.5.21 的 user 启动会看到红点提示升级
+2. **关键踩坑**:首次 commit 误把 174MB Setup.exe 加进 git(`.git add .` 没过滤) → `git push` 报 `File exceeds 100MB limit`
+3. **修法**:`git reset --soft HEAD~1` 撤回 → `git reset HEAD release/X-2_v1.1.5.22_Setup.exe{,.md5,.sha256}` 把 3 个大文件从 staged 移出(保留 working dir) → `git commit -F release/.commit_msg_v1.1.5.22.txt` 重做 commit(只剩 8 个文本文件)
+4. `git push origin main` → `b09598f..53b8e47 main -> main` 成功
+5. `MANJU_X2_PAT=... python .publish_v1.1.5.22.py` → 自动创/更新 GitHub release + raw binary POST 上传 3 个 asset(Setup.exe / .md5 / .sha256)
+6. release URL: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.22
+7. update.json 指向 v1.1.5.22,已装 v1.1.5.21 的 user 启动会看到红点提示升级
+8. **硬约束 (新)**:**v1.1.5.22+ Setup.exe (.md5/.sha256) 绝不能 git add 进 commit**,必须留在 working dir,只走 `python .publish_v{ver}.py` 上传(174MB > GitHub 100MB file size limit)
+9. **自动化规范 (user 要求)**:以后每次修改无特殊问题,直接 commit + push + publish(完整 3 步),并更新本 handover 文件记录发布结果
 
 ## 二、v1.1.5 — 16 个 BUG 全面修复(2026-07-10)
 
@@ -155,11 +160,13 @@
 
 ## 四、发布流程(已自动化部分)
 
-1. `python build_x2.py` → 打 EXE + Inno Setup 编译
-2. `git add ... && git commit -F release/.commit_msg_v{ver}.txt`
-3. `git push origin main`
-4. `python .publish_v{ver}.py`(需要 `MANJU_X2_PAT` 环境变量)
-5. `update.json` 自动被 raw.githubusercontent.com 服务,用户软件 24h 内点检查更新可拉到
+1. `python build_x2.py` → 打 EXE + Inno Setup 编译 → `release/X-2_v{ver}_Setup.exe`
+2. `git add source/ docs/ installer/ handover_x2.md .publish_v{ver}.py release/.commit_msg_v{ver}.txt release/update.json`
+   - **绝对不要** `git add release/X-2_v{ver}_Setup.exe{,.md5,.sha256}`(174MB > 100MB limit)
+3. `git commit -F release/.commit_msg_v{ver}.txt`
+4. `git push origin main`
+5. `MANJU_X2_PAT=... python .publish_v{ver}.py`(需要 user 给 PAT;raw binary POST 上传 3 个 asset)
+6. `update.json` 自动被 raw.githubusercontent.com 服务,用户软件 24h 内点检查更新可拉到
 
 ## 五、用户偏好(从 user_profile 提炼)
 
