@@ -1,4 +1,4 @@
-﻿; 漫剧助手X-2 用户版 Inno Setup 脚本
+; 漫剧助手X-2 用户版 Inno Setup 脚本
 ; 输出: 漫剧助手X-2_v{APP_VERSION}_Setup.exe
 ;
 ; 安装目录结构:
@@ -17,7 +17,7 @@
 ;   └── logs\
 
 #define MyAppName "漫剧助手X-2"
-#define MyAppVersion "1.1.5.19"
+#define MyAppVersion "1.1.5.20"
 #define MyAppPublisher "ManjuTools"
 #define MyAppURL "https://github.com/xyq900319xyq/manju-x2"
 #define MyAppExeName "漫剧助手X-2.exe"
