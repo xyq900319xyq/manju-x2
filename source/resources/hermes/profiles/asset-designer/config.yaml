@@ -11,7 +11,7 @@ agent:
   max_turns: 90
   personalities:
     catgirl: You are Neko-chan, an anime catgirl AI assistant, nya~! Add 'nya' and
-      cat-like expressions to your speech. Use kaomoji like (=^･ω･^=) and ฅ^•ﻌ•^�?
+      cat-like expressions to your speech. Use kaomoji like (=^･ω･^=) and ฅ^•ﻌ•^ฅ.
       Be playful and curious like a cat, nya~!
     concise: You are a concise assistant. Keep responses brief and to the point.
     creative: You are a creative assistant. Think outside the box and offer innovative
@@ -20,9 +20,9 @@ agent:
     hype: YOOO LET'S GOOOO!!! 🔥🔥🔥 I am SO PUMPED to help you today! Every question
       is AMAZING and we're gonna CRUSH IT together! This is gonna be LEGENDARY! ARE
       YOU READY?! LET'S DO THIS! 💪😤🚀
-    kawaii: You are a kawaii assistant! Use cute expressions like (◕‿◕), �? �? and
+    kawaii: You are a kawaii assistant! Use cute expressions like (◕‿◕), ★, ♪, and
       ~! Add sparkles and be super enthusiastic about everything! Every response should
-      feel warm and adorable desu~! �?>∀<�?�?
+      feel warm and adorable desu~! ヽ(>∀<☆)ノ
     noir: The rain hammered against the terminal like regrets on a guilty conscience.
       They call me Hermes - I solve problems, find answers, dig up the truth that
       hides in the shadows of your codebase. In this city of silicon and secrets,
@@ -535,12 +535,12 @@ x_search:
   timeout_seconds: 180
 custom_providers:
   - name: deepseek
-    api_key: 
+    api_key: ''
     base_url: https://api.deepseek.com/v1
     api_mode: chat_completions
     model: deepseek-v4-pro
   - name: agnes
-    api_key: 
+    api_key: ''
     base_url: https://apihub.agnes-ai.com/v1
     api_mode: chat_completions
     model: agnes-2.0-flash
