@@ -261,7 +261,7 @@ def main() -> int:
     app.setApplicationName("漫剧助手X-2")
     app.setApplicationDisplayName("漫剧助手X-2")
     app.setOrganizationName("ManjuTools")
-    app.setApplicationVersion("1.1.5.21")
+    app.setApplicationVersion("1.1.5.22")
 
     _setup_logging()
 
@@ -281,12 +281,37 @@ def main() -> int:
     # 必须在 MainWindow 之前，让用户在第一次看到主窗口前就填好 API key
     if not _run_first_run_wizard(ROOT):
         return 0
+    # v1.1.5.22 修：wizard 期间 Config.get() 已在 __init__ 创建单例(那时
+    # secrets.bin 还不存在,api_key 都是空)。wizard save_secrets 后单例
+    # 还是空 → MainWindow 拿到同一份单例 → 当前 session 调 LLM 必失败。
+    # 重新 reload 让单例原地更新,合并刚写的 secrets.bin(原地更新机制
+    # 保证 StoryboardTask 等持 self._config 引用的 task 也看到新 key)。
+    try:
+        from core.config import Config as _Cfg
+        _Cfg.reload()
+    except Exception as _re:  # noqa: BLE001
+        logging.getLogger("manju").warning("wizard 后 reload Config 失败: %s", _re)
 
     try:
         window = MainWindow(ROOT)
     except Exception as e:
         logging.getLogger("manju").exception("MainWindow 构造失败")
-        print(f"FATAL: {e}", file=sys.stderr)
+        # v1.1.5.22 修：致命错误必须弹 QMessageBox 告诉用户具体错,不能只往 stderr 打
+        # 让 main() 在 QApplication 跑起来之后才可能弹,所以包在 try 里;之前只 print
+        # → 软件静默退出,用户根本不知道为什么崩了。
+        try:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(
+                None,
+                f"{app.applicationName()} 启动失败",
+                f"启动时发生致命错误，软件无法继续运行。\n\n"
+                f"错误类型: {type(e).__name__}\n"
+                f"错误信息: {e}\n\n"
+                f"完整堆栈已写入 logs/manju.log，请联系开发者时附上日志。\n"
+                f"项目根: {ROOT}",
+            )
+        except Exception:
+            print(f"FATAL: {e}", file=sys.stderr)
         return 1
     window.show()
 
@@ -296,7 +321,7 @@ def main() -> int:
         from core.updater import UpdateChecker
         window._updater = UpdateChecker(
             project_root=ROOT,
-            current_version="1.1.5.21",
+            current_version="1.1.5.22",
             parent=window,
         )
         # 监听信号：红点 / 状态栏提示

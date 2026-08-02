@@ -1,0 +1,18 @@
+v1.1.5.22: 🐛 P0 修复 - 新用户填完 API 后软件闪退无法启动
+
+1. core/migration.py:run_first_migration 老 db 不存在时不再 raise FileNotFoundError,
+   调新增的 init_empty_db 创建只含 schema 的空 db。新用户(没装过 D:\剧本分镜助手)
+   也能正常启动,不再静默闪退
+2. core/migration.py: 新增 init_empty_db 函数(ensure_data_dir + init_new_schema + _meta 标记)
+3. core/migration.py 顶部加 log = logging.getLogger("manju.migration")(原文件只 import logging)
+4. main.py: _run_first_run_wizard 返回 True 后调 Config.reload(),让 wizard 期间创建的
+   Config 单例(那时 secrets.bin 还不存在,api_key 全空)能原地更新成新填的 key,避免当前
+   session 调 LLM 失败要重启
+5. main.py: MainWindow 构造失败加 QMessageBox.critical 弹框(EXE --windowed 模式
+   print 到 stderr 用户看不到,必须弹框告诉 user 错在哪)
+6. 三处版本号一致 bump 1.1.5.21 → 1.1.5.22
+   (main.py:264 setApplicationVersion + main.py:324 UpdateChecker + .iss:20 MyAppVersion)
+7. docs/更新日志.md 加 v1.1.5.22 段
+8. .publish_v1.1.5.22.py raw binary POST 发布脚本(不用 multipart,跟 v1.1.1 硬约束一致)
+
+教训:新用户场景必须考虑;致命错误必须弹框;wizard/设置写盘后必须 reload 单例

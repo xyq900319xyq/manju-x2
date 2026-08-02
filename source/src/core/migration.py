@@ -15,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+log = logging.getLogger("manju.migration")
+
 # 旧 db 默认位置（可改）
 DEFAULT_OLD_DB = Path(r"D:\剧本分镜助手\projects.db")
 
@@ -179,9 +181,25 @@ def _copy_table(con_src: sqlite3.Connection, con_dst: sqlite3.Connection, table:
 
 
 def run_first_migration(root: Path, old_db: Path = DEFAULT_OLD_DB) -> dict:
-    """首次迁移：旧 db → 新 db。仅当新 db 不存在时执行。"""
+    """首次迁移：旧 db → 新 db。仅当新 db 不存在时执行。
+
+    v1.1.5.22 修：老 db 不存在时不再 raise FileNotFoundError,直接调
+    `init_empty_db` 创建一个空的新 db(只跑 schema init + _meta 标记),
+    让全新用户(没装过 D:\\剧本分镜助手 的)也能正常启动。
+    之前硬要求老 db 存在 → 新用户首次启动 open_db 抛 FileNotFoundError →
+    MainWindow 构造失败 → 软件静默退出 → 重启还是同样错。
+    行为差异:
+    - 老用户在 (有 D:\\剧本分镜助手\\projects.db):跑原来的迁移(读老 db 写新 db)
+    - 新用户 (没有 D:\\剧本分镜助手\\projects.db):跑 init_empty_db(空 schema)
+    两种情况都返回 dict 含 'skipped' / 'new_path',调用方 open_db 不感知。
+    """
     if not old_db.exists():
-        raise FileNotFoundError(f"旧 db 不存在: {old_db}")
+        log.warning(
+            "老 db 不存在 %s(新用户/没装过 D:\\剧本分镜助手),"
+            "直接创建空的新 db(不报错,不影响启动)",
+            old_db,
+        )
+        return init_empty_db(root, reason="no_old_db")
     new_path = ensure_data_dir(root)
     if new_path.exists():
         return {"skipped": True, "new_path": str(new_path)}
@@ -217,6 +235,55 @@ def run_first_migration(root: Path, old_db: Path = DEFAULT_OLD_DB) -> dict:
         "source_path": str(old_db),
         "source_sha256": src_sha,
         "counts": counts,
+    }
+
+
+def init_empty_db(root: Path, reason: str = "manual") -> dict:
+    """v1.1.5.22 新增：全新用户场景,创建只含 schema 的空 db。
+
+    与 run_first_migration 行为对齐(都返回 dict),但**不**依赖任何老 db。
+    data/projects.db 还不存在时:
+    1. ensure_data_dir 创 D:\\漫剧助手\\data\\
+    2. init_new_schema 建 _meta / projects / episodes / audio_selections / assets 5 张表
+    3. _meta 写 (source_path="(none)", migrated_at=now, app_version="v1.1.5.22")
+    4. 返回 {"skipped": False, "new_path": ..., "empty": True, "reason": reason}
+
+    reason 仅用于 log 区分('no_old_db' = 老用户迁移走 fallback;'manual' = 主动调用)。
+    """
+    new_path = ensure_data_dir(root)
+    if new_path.exists() and new_path.stat().st_size > 0:
+        return {"skipped": True, "new_path": str(new_path)}
+    con = sqlite3.connect(new_path)
+    try:
+        init_new_schema(con)
+        cur = con.cursor()
+        cur.executemany(
+            "INSERT INTO _meta(key, value) VALUES (?, ?)",
+            [
+                ("source_path", "(none)"),
+                ("source_sha256", ""),
+                (
+                    "migrated_at",
+                    datetime.now().isoformat(timespec="seconds"),
+                ),
+                ("source_rows", "{}"),
+                ("app_version", "1.1.5.22"),
+                ("empty_init_reason", reason),
+            ],
+        )
+        con.commit()
+    finally:
+        con.close()
+    log.info(
+        "init_empty_db: 已创建空 db %s (reason=%s)",
+        new_path,
+        reason,
+    )
+    return {
+        "skipped": False,
+        "new_path": str(new_path),
+        "empty": True,
+        "reason": reason,
     }
 
 
