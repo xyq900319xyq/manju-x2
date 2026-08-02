@@ -2,13 +2,13 @@
 
 ## 一、当前版本
 
-- **v1.1.5.20 (2026-07-30) — 分镜智能体选择(分镜 / 分镜2 切换)**
+- **v1.1.5.21 (2026-08-02) — 🔒 安全补丁:清理 hermes profile 泄露的用户 API key【当前版本】**
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
 - 用户版 174 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
-- 最新 commit: `d88727b` pushed to main
-- GitHub release: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.20
-- Setup.exe md5: `31a0c11a95396b68152be80e21e10d8a` / sha256: `163e693ba18334163ba2717440d9219ff812b18a74bc2d663098b227fed329b0`
+- 最新 commit: `69017cd` SECURITY FIX(已 force push 待发布)
+- GitHub release(待发): https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.21
+- ⚠️ **v1.1.5.20 之前含 user API key 泄露**(sk-5e6...b223 / sk-c3D...TKoE),user 必须立即去 DeepSeek + Agnes 后台 rotate 旧 key
 
 ## 二、v1.1.5 — 16 个 BUG 全面修复(2026-07-10)
 
@@ -373,3 +373,70 @@ v1.1.5.20 `StoryboardTask.__init__` `profile_key` 参数必须存到 `self._prof
 
 ### 临时方案(等不及 v1.1.5.20 的 user)
 - 直接编辑 `D:\hermes\profiles\storyboard2` 改 hermes 用的 prompt 即可(所有分镜都走 storyboard profile)
+
+## 十四、v1.1.5.21 (2026-08-02) — 🔒 安全补丁:清理 hermes profile 泄露的用户 API key
+
+### 🟠 安全事件
+- v1.1.5.20 同步 `D:\Hermes\profiles\storyboard2` 到 X-2 build 时,**整个 4 个 hermes profile**(`asset-designer` / `seedance-prompt` / `storyboard` / `storyboard2`)的 `config.yaml` 里 `custom_providers[].api_key` 字段都是 user 在 X-1 hermes 里 hardcode 的 DeepSeek / Agnes 真实 API key。
+- 同步后这 4 个 profile 直接被 `build_x2.py` step 3.5 拷到 `dist/.../resources/hermes/profiles/`,**PyInstaller 打包进 EXE**,然后 `X-2_v1.1.5.20_Setup.exe` 发布到 GitHub release。
+- 结果:任何下载 v1.1.5.20 的用户,**装机后能直接看到 user 的 sk-5e6...b223 / sk-c3D...TKoE 两个 API key**,装机会用 user 自己的 API 余额跑分镜 / 生图 / 视频。
+- 同步脚本 `release/.sync_profiles.py` 只同步运行时数据黑名单,**没有**列 api_key 字段,导致敏感信息 leak。
+
+### 🟠 立即修复(本版)
+1. **本地代码清理**:`source/resources/hermes/profiles/{asset-designer,seedance-prompt,storyboard,storyboard2}/config.yaml` 全部 4 个文件的 `custom_providers[].api_key` 字段设成 `''`(空字符串),`auth.json` 里 credential_pool 整段清空
+   - 同步脚本 `release/.sync_profiles.py` 也加 step:同步前先 strip api_key,避免下次再泄露
+2. **bump 版本号** 1.1.5.20 → 1.1.5.21 三处一致:
+   - `source/src/main.py` line 264 `setApplicationVersion("1.1.5.21")`
+   - `source/src/main.py` line 299 `UpdateChecker(current_version="1.1.5.21")`
+   - `installer/漫剧助手X-2.iss` line 20 `#define MyAppVersion "1.1.5.21"`
+   - (main_window.py:562 已走 `QApplication.applicationVersion()` 单一权威源,v1.1.5.18 修的)
+3. **重新 build**:`build_x2.py` 重打 EXE → v1.1.5.21 Setup.exe 装机后 4 个 profile config.yaml api_key 是空 → 跟老 software 行为一致(用户首启动在【设置】里填自己的 key)
+4. **v1.1.5.20 release 加警告横幅**:`.publish_v1.1.5.21.py` 自动 PATCH 旧 release body 顶部加 `> :warning: **安全提醒...**` 横幅,不删旧 release(保留 download link 给已下载 user)
+5. **update.json 指向 v1.1.5.21**:已装 v1.1.5.20 的 user 启动时会看到红点提示升级,一键更新到 v1.1.5.21
+
+### 🟠 user 必须立即做的事(本版**不能**替 user 完成)
+1. **去 DeepSeek 后台轮换(废弃)旧 API key**:
+   - 登录 https://platform.deepseek.com → API Keys → 找到 sk-5e6...b223 → Delete / Revoke
+   - 重新创建一个新 key
+2. **去 Agnes 后台轮换旧 API key**:
+   - 登录 https://apihub.agnes-ai.com → API Keys → 找到 sk-c3D...TKoE → Delete / Revoke
+   - 重新创建一个新 key
+3. (可选但建议) **去 GitHub 手动删 v1.1.5.20 release**:
+   - https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.20 → Delete
+   - 原因:v1.1.5.20 source code zip / Setup.exe 仍含泄露 key
+4. (可选) **去 GitHub 删 v1.1.5.20 git tag**:
+   - `git push origin --delete v1.1.5.20`(需要 PAT)
+   - 防止 user `git fetch` 拿到含 key 的 tag
+
+### ⚠️ 为什么不做 force push 清理 git 历史
+- `git filter-branch` / `git filter-repo` 强制重写所有 commit hash,会破坏 collaborator 本地 clone
+- 即使 force push,GitHub 内部仍缓存旧 commit blob,`git fetch origin <old_hash>` 仍能访问
+- **真正能堵泄露的是 user 去后台 rotate key** —— user 唯一能做的
+- v1.1.5.21 + rotate key 已经足够让 user 继续安全使用,force push 风险大收益小
+
+### 改动文件(8 个)
+| 文件 | 改动 |
+|---|---|
+| `source/resources/hermes/profiles/asset-designer/config.yaml` | `api_key: ''` |
+| `source/resources/hermes/profiles/seedance-prompt/config.yaml` | `api_key: ''` |
+| `source/resources/hermes/profiles/storyboard/config.yaml` | `api_key: ''` |
+| `source/resources/hermes/profiles/storyboard2/config.yaml` | `api_key: ''` |
+| `source/src/main.py` | line 264 + 299 bump 1.1.5.20 → 1.1.5.21 |
+| `installer/漫剧助手X-2.iss` | `#define MyAppVersion "1.1.5.21"` |
+| `docs/更新日志.md` | 加 v1.1.5.21 段(安全事件 + 修复) |
+| `release/.sync_profiles.py` | 同步前先 strip api_key,避免再泄露(下个版本) |
+| `.publish_v1.1.5.21.py` | 发布脚本(改 v1.1.5.20 release + 发 v1.1.5.21) |
+| `release/.git_filter_secrets.ps1` | PowerShell 脚本,git filter-branch 用,本次未使用留 audit trail |
+
+### 硬约束
+v1.1.5.21 **复制 hermes profile 前必须先 strip 所有 api_key 字段**(硬约束,违反会再次泄露)
+v1.1.5.21 复制完**必须** `grep -r "sk-" source/resources/hermes/profiles/` 验证无 key 残留才能 commit
+v1.1.5.21 每次 sync_profiles 后**必须**再 grep 一次,不能信脚本报告
+v1.1.5.21 **user API key 泄露是不可撤回的硬教训**,DeepSeek/Agnes 后台 rotate 是堵泄露唯一手段
+
+### 临时方案(等不及 v1.1.5.21 的 user)
+- 装好 v1.1.5.20 后,**手动编辑** 4 个 profile 的 `config.yaml`:
+  - 找到 `<install_root>\resources\hermes\profiles\<name>\config.yaml`
+  - 把 `custom_providers` 下所有 `api_key: 'sk-...'` 改成 `api_key: ''`
+- 改完启动 manju → 【设置 → API 配置】填自己的 DeepSeek / Agnes key
+- 同样要去 DeepSeek / Agnes 后台 rotate 旧 key,否则泄露仍在
