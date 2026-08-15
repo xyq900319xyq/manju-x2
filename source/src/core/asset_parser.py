@@ -230,9 +230,15 @@ def extract_asset_names(asset_cache: str) -> Dict[str, List[str]]:
         ("场景资产", "场景"),
         ("物品资产", "物品"),
     ):
-        idx = asset_cache.find(f"## {section_key}")
+        # v1.1.5.23【修 BUG:LLM 推理内容里出现 "## 人物资产" 字符串(被引号包裹)
+        # 的自述被 find 误命中,导致 section 切到推理内容里,### 人物N 全部找不到,
+        # 最终资产列表漏掉"人物资产:"行。修法:用严格的 "## 段名\n" 匹配,
+        # 必须有换行符才认;文件末尾无换行的极端边界 fallback 回原 find。
+        idx = asset_cache.find(f"## {section_key}\n")
         if idx < 0:
-            continue
+            idx = asset_cache.find(f"## {section_key}")
+            if idx < 0:
+                continue
         # 切到下一个 ## 段
         start = idx + len(f"## {section_key}")
         nxt = re.search(r"\n##\s", asset_cache[start:])

@@ -1,0 +1,15 @@
+v1.1.5.23: 🐛 BUG 修复 - 资产列表漏抽"人物资产"段
+
+1. core/asset_parser.py:extract_asset_names 找段位从 find(f"## {section_key}")
+   改为 find(f"## {section_key}\n")——要求标题后必须跟换行符,避开 LLM 推理内容
+   里被引号包裹的 "## 人物资产" 自述字符串误命中(LLM 思考时反复说"我需要输出
+   ## 人物资产 标题"被 find 第一次匹配切到了推理内容,导致 section 里没有
+   ### 人物N 条目,人物资产整段被丢)
+2. 保留 find(f"## {section_key}") 兜底分支,防文件末尾无换行的极端边界
+3. 三处版本号一致 bump 1.1.5.22 → 1.1.5.23
+   (main.py:264 setApplicationVersion + main.py:324 UpdateChecker + .iss:20 MyAppVersion)
+4. docs/更新日志.md 加 v1.1.5.23 段
+5. .publish_v1.1.5.23.py raw binary POST 发布脚本(跟 v1.1.5.22 一样的硬约束)
+
+教训:LLM 输出解析必须严格匹配,find markdown 标题必须要求后跟换行符,
+不能用模糊 find,LLM 推理内容里会反复提到自己即将输出的结构

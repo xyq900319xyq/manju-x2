@@ -496,3 +496,46 @@ v1.1.5.21 **user API key 泄露是不可撤回的硬教训**,DeepSeek/Agnes 后�
   - 把 `custom_providers` 下所有 `api_key: 'sk-...'` 改成 `api_key: ''`
 - 改完启动 manju → 【设置 → API 配置】填自己的 DeepSeek / Agnes key
 - 同样要去 DeepSeek / Agnes 后台 rotate 旧 key,否则泄露仍在
+
+---
+
+## 十五、skill 嵌套污染清理(2026-08-15)
+
+**症状**: 跑 seedance-prompt profile 提示词生成时,hermes 报 skill 冲突:
+```
+Ambiguous skill name 'seedance-prompt-generator': 2 candidates —
+  D:\漫剧助手\resources\hermes\profiles\seedance-prompt\skills\creative\seedance-prompt-generator\SKILL.md
+  D:\漫剧助手\resources\hermes\profiles\seedance-prompt\skills\skills\creative\seedance-prompt-generator\SKILL.md
+```
+浪费 1 次 API call 才回退到分类名显式调用。
+
+**根因**: 早期手动同步 `D:\hermes\profiles` 时重复拷贝,产生 `skills/skills/` 嵌套目录。
+X-1 的嵌套里 25 个 skill 子目录,1 个 SKILL.md (computer-use) 是真版本(07-29/14081B),其他 24 个全空(SAME 或 0 SKILL.md);
+X-2 的嵌套里 0 个 SKILL.md,纯空壳。嵌套目录的 metadata (`.usage.json`、`.bundled_manifest`) 全部是 7-08 老数据,根目录是 8-14 新数据。
+
+**清理动作** (X-1 + X-2 同步):
+- X-1: 删 1 个根(嵌套版新) + 删 22 个嵌套副本 + 删整个 `skills/skills/` 嵌套目录(含 .curator_backups)
+- X-2: 删整个 `source/resources/hermes/profiles/seedance-prompt/skills/skills/` 嵌套目录
+
+**X-2 commit**:
+- `2b7a9d5` (2026-08-15) chore(skills): 清理 seedance-prompt profile 的 skills/skills 嵌套污染
+- 6 files changed, 39 deletions(-) - 只删 `.curator_backups/` 里的 3 个时间戳 6 个备份文件(嵌套目录本身在 v1.1.5.20 commit 时就 gitignore 了,不在 repo 里)
+- 已 push 到 origin/main: `cabcb57..2b7a9d5 main -> main`
+
+**X-1 不是 git 仓库**,直接 disk 上删,已记录在 `D:\漫剧助手\handover.md` 第十六节。
+
+**硬约束 (新)**:
+- 任何同步 `D:\hermes\profiles` → `D:\漫剧助手\resources\hermes\profiles` 或 `D:\漫剧助手\manju-x2\source\resources\hermes\profiles` 的脚本**必须**用 `rsync --delete` 或 `robocopy /MIR`,**绝不**用 `/E`(会产生嵌套污染)
+- 同步后**必须**跑验证:
+  ```python
+  import os
+  for root in [r'D:\漫剧助手\resources\hermes\profiles', r'D:\漫剧助手\manju-x2\source\resources\hermes\profiles']:
+      for p in os.listdir(root):
+          nested = os.path.join(root, p, 'skills', 'skills')
+          if os.path.exists(nested):
+              print('POLLUTED:', p)
+              break
+      else:
+          print(root, 'OK')
+  ```
+- hermes 启动日志出现 `Ambiguous skill name` 关键字 → **立刻**检查 `skills/skills/` 嵌套

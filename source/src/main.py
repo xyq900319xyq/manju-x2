@@ -261,7 +261,7 @@ def main() -> int:
     app.setApplicationName("漫剧助手X-2")
     app.setApplicationDisplayName("漫剧助手X-2")
     app.setOrganizationName("ManjuTools")
-    app.setApplicationVersion("1.1.5.22")
+    app.setApplicationVersion("1.1.5.23")
 
     _setup_logging()
 
