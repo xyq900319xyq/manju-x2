@@ -2,11 +2,11 @@
 
 ## 一、当前版本
 
-- **v1.1.5.22 (2026-08-02) — 🐛 P0 修复:新用户填完 API 后软件闪退无法启动【当前版本】**
+- **v1.1.5.23 (2026-08-15) — 🐛 BUG 修复:资产列表漏抽"人物资产"段【当前版本】**
 - 路径: `D:\漫剧助手\manju-x2`
 - Python: 3.11,PyInstaller 6.21.0,Inno Setup 6.7.3
 - 用户版 174 MB(+~83MB PortableGit),Setup.exe 命名 `X-2_v{ver}_Setup.exe` (纯 ASCII,GitHub 截断中文)
-- GitHub release: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.22
+- GitHub release: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.23
 - ⚠️ **v1.1.5.20 之前含 user API key 泄露**(sk-5e6...b223 / sk-c3D...TKoE),user 必须立即去 DeepSeek + Agnes 后台 rotate 旧 key
 
 ---
@@ -496,6 +496,57 @@ v1.1.5.21 **user API key 泄露是不可撤回的硬教训**,DeepSeek/Agnes 后�
   - 把 `custom_providers` 下所有 `api_key: 'sk-...'` 改成 `api_key: ''`
 - 改完启动 manju → 【设置 → API 配置】填自己的 DeepSeek / Agnes key
 - 同样要去 DeepSeek / Agnes 后台 rotate 旧 key,否则泄露仍在
+
+---
+
+## 十六、v1.1.5.23 (2026-08-15) — 🐛 BUG 修复:资产列表漏抽"人物资产"段
+
+### 🟠 BUG 现象
+- **真千金项目第2集做提示词时,asset-designer LLM 实际抽取了 10 个人物资产**(莉莉、伊森、凡妮莎、德里克、凯尔、老奈特、凯瑟琳·斯特林、理查德·斯特林、哈里森家管家、群众角色)
+- **但 `outputs/<project_id>_asset_list.txt` 写盘时只有场景+物品(7 个),"人物资产:"这一行整个漏掉**
+- 后果:`build_seedance_prompt` 注入下游 LLM 的 `【项目资产】` 块**没有人物**,seedance agent 只能自己造名字(如"莉莉")填进 `Asset Definitions`,违反 SOUL.md 第 9 条铁律"资产名必须来自用户输入,禁止自行编造"
+
+### 🟠 根因
+- `source/src/core/asset_parser.py:extract_asset_names` 用 `asset_cache.find(f"## {section_key}")` 找段位
+- LLM 输出里 ~1411 行附近有真正的 `## 人物资产\n` 标题
+- **但 LLM 推理/思考内容里**多次出现字符串 `## 人物资产`(被引号包裹的自述,如 "我需要输出 `## 人物资产` 标题"),`find` 第一次出现定位到**推理内容里**(idx=1553),不是真正的资产标题(真标题在 idx=69473)
+- 切出的"section"完全是 LLM 推理内容,里面没有 `### 人物N` 条目,`names` 为空
+- **为什么场景和物品能抽到?** LLM 推理里没引用 `## 场景资产` / `## 物品资产` 字符串,所以 `find` 第一次出现就是真标题
+
+### 🟢 修复(本版)
+- **`core/asset_parser.py:extract_asset_names`** 找段位从 `find(f"## {section_key}")` 改为 `find(f"## {section_key}\n")`——**要求标题后必须跟换行符**,避开推理内容里被引号包裹的字符串误命中
+- 保留 `find(f"## {section_key}")` 兜底分支,防文件末尾无换行的极端边界
+- 一行代码改动 + 注释,**不影响现有数据**(只修 BUG,以前漏抽的人物资产能被正确抽到)
+- 三处版本号一致 bump 1.1.5.22 → 1.1.5.23:
+   - `source/src/main.py:264` `setApplicationVersion("1.1.5.23")`
+   - `source/src/main.py:324` `UpdateChecker(current_version="1.1.5.23")`
+   - `installer/漫剧助手X-2.iss:20` `#define MyAppVersion "1.1.5.23"`
+
+### 🟠 发布踩坑:urllib 60s/600s 都超时,Setup.exe 174MB
+- 第一次跑 `.publish_v1.1.5.23.py`(`urllib.request.urlopen(req, timeout=60)`):SSL write 超时
+- 改 timeout=600:还是超时
+- **根因**:Python `urllib` 在 large body 时 SSL write 内部仍有 socket-level write timeout(可能跟 TCP send buffer 满了 + retry 有关)
+- **修法**:写 `.upload_v1.1.5.23.py` 改用 `http.client.HTTPSConnection` 直接调底层,timeout=1800s(30 分钟),**174MB body 一次性发**,`SSL.write` 一次性喂完所有数据,不再分 retry → 3 个文件全部 status=201 一次过
+
+### 🟢 涉及文件
+- `source/src/core/asset_parser.py` (extract_asset_names 严格匹配 `## 段名\n`)
+- `source/src/main.py` (版本号)
+- `installer/漫剧助手X-2.iss` (版本号)
+- `docs/更新日志.md` (加 v1.1.5.23 段)
+- `.publish_v1.1.5.23.py` (release 创/更 + 资产上传,**timeout 沿用 600s**但实际写上传走 `.upload_v1.1.5.23.py` 单独跑)
+- `.upload_v1.1.5.23.py` (新增:174MB Setup.exe 大文件上传脚本,http.client 底层,1800s timeout)
+- `release/.commit_msg_v1.1.5.23.txt` (commit message)
+- `release/update.json` (version 1.1.5.22 → 1.1.5.23)
+
+### 📋 教训
+- **LLM 输出解析必须严格匹配**:用 `find` 找 markdown 标题时必须要求后跟换行符,不能用模糊 find——LLM 推理内容里会反复提到自己即将输出的结构,导致 `find` 误命中
+- **更稳妥的修法**(未来如复现)是在 `find` 之前先调 `_filter_output` 过滤掉 LLM 推理内容,但本 bug 用 `\n` 严格匹配一行就修了,先不扩大改动
+- **大文件上传别用 urllib**:`urllib` 在 100MB+ 时 SSL write 容易超时,改用 `http.client.HTTPSConnection` 调底层 + 长 timeout 更稳;若以后还要发更大的,考虑用 `requests` 库 + `stream=True` + 分块读取 + 单次 send
+
+### 🟠 发布结果
+- **commit**: `b81b59e` (2026-08-15) v1.1.5.23: 🐛 BUG 修复 - 资产列表漏抽"人物资产"段
+- **push**: `2b7a9d5..b81b59e main -> main`
+- **GitHub release**: https://github.com/xyq900319xyq/manju-x2/releases/tag/v1.1.5.23 (含 Setup.exe 174.2MB + .md5 + .sha256)
 
 ---
 
